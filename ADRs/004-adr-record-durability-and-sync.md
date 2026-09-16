@@ -1,4 +1,4 @@
-# ADR-001: Save every record at its origin before confirming, then synchronise when connected
+# ADR-004: Save every record at its origin before confirming, then synchronise when connected
 
 **Status:** Proposed
 

@@ -1,4 +1,4 @@
-# ADR-002: Cloud primary deployment with local admission validation
+# ADR-005: Cloud primary deployment with local admission validation
 
 **Status:** Proposed
 
