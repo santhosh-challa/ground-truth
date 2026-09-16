@@ -459,7 +459,7 @@ AI assists with extraction, summaries and the camera-counting pilot. General beh
 
 #### C2 Diagram 
 
-[Animal Monitoring]([https://github.com/santhosh-challa/ground-truth/blob/main/assets/Animal_Monitoring_C2.png](https://github.com/santhosh-challa/ground-truth/blob/main/assets/Animal_Monitoring_C2.png))
+[Animal Monitoring](https://github.com/santhosh-challa/ground-truth/blob/main/assets/Animal_Monitoring_C2.png](https://github.com/santhosh-challa/ground-truth/blob/main/assets/Animal_Monitoring_C2.png)
 
 #### Flow Diagrams
 
