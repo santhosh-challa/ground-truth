@@ -3,7 +3,7 @@
 Date: 2026-09-15
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 Von Digitalis Estates has no visibility today into which zones (rides, animal

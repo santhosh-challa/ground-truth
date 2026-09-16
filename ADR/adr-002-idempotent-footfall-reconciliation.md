@@ -3,7 +3,7 @@
 Date: 2026-09-15
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 Popularity scoring is only as trustworthy as the footfall counts feeding it.
