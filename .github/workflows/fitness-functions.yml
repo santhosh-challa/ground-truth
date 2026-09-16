@@ -1,0 +1,21 @@
+name: Architecture Fitness Functions
+
+on:
+  push:
+    branches:
+      - main
+      - feedback_evaluation_reporting
+  pull_request:
+
+jobs:
+  offline-tolerance:
+    name: Offline Tolerance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Offline Tolerance Fitness Function
+        run: |
+          ./engineering-practices/fitness-tests/offline-tolerance.sh
