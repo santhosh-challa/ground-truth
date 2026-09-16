@@ -1,6 +1,6 @@
 # ADR-004: Save every record at its origin before confirming, then synchronise when connected
 
-**Status:** Proposed
+**Status:** Accepted
 
 **Created:** 12 September 2026
 
