@@ -1,0 +1,86 @@
+name: Architecture Fitness Functions
+
+on:
+  push:
+    branches:
+      - main
+      - feedback_evaluation_reporting
+  pull_request:
+
+jobs:
+  offline-tolerance:
+    name: Offline Tolerance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Offline Tolerance Fitness Function
+        run: ./engineering-practices/fitness-tests/offline-tolerance.sh
+
+  safety-latency:
+    name: Safety Latency
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Safety Latency Fitness Function
+        run: ./engineering-practices/fitness-tests/safety-latency.sh
+
+  elasticity:
+    name: Elasticity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Elasticity Fitness Function
+        run: ./engineering-practices/fitness-tests/elasticity.sh
+
+  provider-portability:
+    name: Provider Portability
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Provider Portability Fitness Function
+        run: ./engineering-practices/fitness-tests/provider-portability.sh
+
+  verifiability:
+    name: Verifiability
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Verifiability Fitness Function
+        run: ./engineering-practices/fitness-tests/verifiability.sh
+
+  cost-predictability:
+    name: Cost Predictability
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Cost Predictability Fitness Function
+        run: ./engineering-practices/fitness-tests/cost-predictability.sh
+
+  privacy:
+    name: Privacy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Privacy Fitness Function
+        run: ./engineering-practices/fitness-tests/privacy.sh
