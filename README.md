@@ -10,7 +10,7 @@ The 72nd Countess Von Digitalis has inherited a sprawling estate and a family bu
 |---------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
 | Interactive admin dashboard prototype | [The Steward — live prototype](https://santhosh-challa.github.io/ground-truth/prototype/the-steward-dashboard.html) |
 | Dashboard screenshots                 | [prototype/screens/](prototype/screens/)                                                                     |
-| Architecture decision records         | [ADRs/](ADRs/) and the [ADR index](#architecture-decision-records)                                    |
+| Architecture decision records         | [ADR/](ADR/) and the [ADR index](#architecture-decision-records)                                    |
 | Per-use-case detail                   | [usecases/](usecases/)                                                                                       |
 | Brainstorming artifacts               | [other-artifacts/](other-artifacts/)                                                                         |
 | How this meets the judging criteria   | [Traceability table](#how-this-submission-addresses-the-judging-criteria)                                           |
