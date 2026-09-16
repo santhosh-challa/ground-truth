@@ -173,15 +173,15 @@ Prioritized:
 2.  Animals and plants sensor data, including safety
 3.  Footfall analytics
 4.  Feedback collection and assessment
+5.  Growth and retention
 
 Cross-cutting:
 
-5.  Growth and retention
 6.  Ingestion, turning existing paper records into structured data
 7.  Alert notifications and the notification service
 8.  Admin dashboard
 
-Each of the four carries a C2 diagram, a data flow and its own ADRs.
+Each of the four of five prioritized carry a C2 diagram, a data flow and its own ADRs.
 
 ### 2.5 The four tests every idea had to survive
 
@@ -884,6 +884,8 @@ All ADRs live in [ADR/](ADR/) and follow the standard format: title, status, con
 | [adr-001-popularity-scoring-approach](ADR/adr-001-popularity-scoring-approach.md)               | Popularity & trend scoring approach: hybrid rule-based baseline with a phased ML forecast/anomaly layer                                                                                                                                                                                                                                                                                                                                                                                   | Accepted   |
 | [adr-002-idempotent-footfall-reconciliation](ADR/adr-002-idempotent-footfall-reconciliation.md) | Idempotent reconciliation strategy for zone footfall counts                                                                                                                                                                                                                                                                                                                                                                                                                               | Accepted   |
 | [adr-003-model-monitoring-and-drift](ADR/adr-003-model-monitoring-and-drift.md)                 | Model monitoring and drift handling for popularity forecasting                                                                                                                                                                                                                                                                                                                                                                                                                            | Accepted   |
+| [adr-004-record-durability-and-sync](ADR/adr-004-record-durability-and-sync.md)                 | Record Durability and Syncing for monitoring enclosure conditions                                                                                                                                                                                                                                                                                                                                                                                                                            | Accepted   |
+| [adr-005-deployment-topology](ADR/adr-005-deployment-topology.md)                 | Deployment Topology for animal sensing data                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Accepted   |
 | [AI Feedback Evaluation And Reporting](ADR/adr-006-ai-feedback-evaluation-and-reporting.md)     | We will implement the feedback and reporting pipeline as a Single Unified Architecture Quantum. While components are physically distributed between the Edge and the Cloud, they form a single, highly cohesive bounded context dedicated to generating actionable visitor insights.                                                                                                                                                                                                      | Accepted   |
 | [adr-007-ticketing-system](ADR/adr-007-ticketing-system.md)                                     | Four core services with clear aggregate ownership: User, Ticket, Payment and Visit. Ticket Service owns ticket/family-pass entitlement and capacity rules; Payment Service owns payment transactions; Visit Service owns visits and check-ins. Gate Validator enforces validity, area entitlement and redemption rules, supports offline entry validation, and syncs entry events when connectivity is restored. Wristbands represent access entitlement but are not the source of truth. | Accepted   |
 
