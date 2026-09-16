@@ -1,6 +1,6 @@
 # ADR-005: Cloud primary deployment with local admission validation
 
-**Status:** Proposed
+**Status:** Accepted
 
 **Created:** 12 September 2026
 
