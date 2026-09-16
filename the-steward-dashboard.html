@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>The Steward — Von Digitalis Estates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* forest */
+  --forest-900:#1C3328; --forest-800:#25422F; --forest-700:#2E5240; --forest-600:#3C6B50;
+  --forest-500:#4A7C59; --forest-400:#6E9B7B; --forest-300:#9BBAA4; --forest-200:#C6D9CB;
+  --forest-100:#E5EFE6; --forest-050:#F1F7F1;
+  /* bark */
+  --bark-700:#5C4433; --bark-600:#74573F; --bark-500:#8B6F4E; --bark-400:#A98A66;
+  --bark-300:#C4A986; --bark-200:#DFCDB2; --bark-100:#EFE4D3;
+  /* signal */
+  --rust-600:#9E452F; --rust-500:#B5533C; --rust-200:#EBC8BC; --rust-100:#F7E9E3;
+  --ochre-600:#8F6414; --ochre-500:#A9781F; --ochre-200:#E6D2A2; --ochre-100:#F8F0DC;
+  --moss-500:#3F8F5F; --moss-100:#DFF0E3;
+  /* ink + paper */
+  --ink-900:#2A2520; --ink-700:#453E37; --ink-600:#5C534C; --ink-400:#8A7F76; --ink-300:#ADA298;
+  --paper:#FFFFFF; --parchment:#FAF7F1; --parchment-2:#F5F0E6;
+  --rule:#E6DDCE; --rule-soft:#F0E9DC;
+  /* type */
+  --serif:'Lora',Georgia,serif;
+  --sans:'Inter',-apple-system,sans-serif;
+  /* space */
+  --xs:4px; --sm:8px; --sm2:12px; --md:16px; --md2:20px; --lg:24px; --xl:32px; --xxl:40px; --xxxl:48px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);font-weight:400;color:var(--ink-900);background:var(--parchment);
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* ---------- shell ---------- */
+.app{display:flex;min-height:100vh}
+.sidebar{width:236px;flex-shrink:0;background:var(--forest-900);color:#fff;padding:var(--lg) 0;
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{padding:0 var(--md2) var(--lg);border-bottom:1px solid rgba(255,255,255,.12)}
+.brand__mark{font-family:var(--serif);font-size:23px;font-weight:600;letter-spacing:.2px;color:#fff}
+.brand__sub{font-size:9.5px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--forest-300);margin-top:3px}
+.navgrp{padding:var(--md2) var(--md2) var(--sm)}
+.navgrp__t{font-size:9.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--forest-400)}
+.nav a{display:flex;align-items:center;justify-content:space-between;gap:var(--sm);
+  padding:9px var(--md2);font-size:13.5px;font-weight:400;color:var(--forest-200);
+  text-decoration:none;cursor:pointer;border-left:3px solid transparent}
+.nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav a.on{background:rgba(255,255,255,.1);color:#fff;border-left-color:var(--bark-300);font-weight:500}
+.pip{font-size:10px;font-weight:600;background:var(--rust-500);color:#fff;border-radius:10px;
+  padding:1px 7px;line-height:1.5}
+.pip--calm{background:rgba(255,255,255,.16)}
+.side-foot{margin-top:auto;padding:var(--md2);border-top:1px solid rgba(255,255,255,.12);
+  font-size:11px;color:var(--forest-300);line-height:1.8}
+.side-foot b{color:#fff;font-weight:600}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{background:var(--paper);border-bottom:1px solid var(--rule);padding:var(--sm2) var(--xl);
+  display:flex;align-items:center;justify-content:space-between;gap:var(--md);position:sticky;top:0;z-index:40}
+.topbar__l h1{font-family:var(--serif);font-size:21px;font-weight:600;color:var(--forest-800);line-height:1.25}
+.topbar__l p{font-size:12px;color:var(--ink-400);font-weight:400;margin-top:1px}
+.topbar__r{display:flex;align-items:center;gap:var(--md)}
+.sync{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-400);font-weight:400}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot--ok{background:var(--moss-500)} .dot--bad{background:var(--rust-500)}
+.roles{display:flex;border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.roles button{font-family:inherit;font-size:11.5px;font-weight:500;padding:5px 12px;border:0;
+  background:var(--paper);color:var(--ink-400);cursor:pointer}
+.roles button.on{background:var(--forest-700);color:#fff}
+
+.wrap{padding:var(--lg) var(--xl) var(--xxxl);max-width:1440px;width:100%}
+.screen{display:none} .screen.on{display:block}
+
+/* ---------- banner ---------- */
+.banner{display:none;align-items:flex-start;gap:var(--sm2);padding:var(--sm2) var(--md);
+  background:var(--rust-100);border-left:3px solid var(--rust-500);margin-bottom:var(--md2)}
+.banner.on{display:flex}
+.banner b{color:var(--rust-600);font-weight:600;font-size:13px}
+.banner p{font-size:12.5px;color:var(--ink-600);font-weight:400;line-height:1.7;margin-top:2px}
+
+/* ---------- type ---------- */
+.ey{font-size:9.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--bark-500);margin-bottom:var(--sm)}
+.sec{margin-bottom:var(--xl)}
+.sec__h{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--md);margin-bottom:var(--sm2)}
+.sec__t{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--forest-800)}
+.sec__s{font-size:12.5px;color:var(--ink-400);font-weight:400;margin-top:2px}
+
+/* ---------- impact KPIs ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sm2);margin-bottom:var(--sm2)}
+.kpi{background:var(--paper);border:1px solid var(--rule);padding:var(--md) var(--md2);
+  border-top:3px solid var(--forest-600)}
+.kpi--money{border-top-color:var(--bark-500)}
+.kpi__l{font-size:9.5px;font-weight:600;letter-spacing:1.3px;text-transform:uppercase;
+  color:var(--ink-400);margin-bottom:var(--sm)}
+.kpi__v{font-family:var(--serif);font-size:31px;font-weight:600;color:var(--forest-800);
+  line-height:1.1;letter-spacing:-.4px}
+.kpi__v small{font-size:15px;font-weight:400;color:var(--ink-400);font-family:var(--sans)}
+.kpi__d{font-size:11.5px;font-weight:500;margin-top:6px}
+.kpi__n{font-size:10.5px;color:var(--ink-300);font-weight:400;margin-top:3px;line-height:1.5}
+.up{color:var(--moss-500)} .down{color:var(--rust-500)} .flat{color:var(--ink-400)}
+
+/* ---------- status strip ---------- */
+.strip{display:flex;gap:1px;background:var(--rule);
+  border:1px solid var(--rule);margin-bottom:var(--xl)}
+.strip__i{flex:1;min-width:0;background:var(--parchment-2);padding:var(--sm2) var(--md)}
+.strip__l{font-size:9.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-400)}
+.strip__v{font-size:17px;font-weight:600;color:var(--forest-800);margin-top:3px;font-family:var(--serif)}
+.strip__v small{font-size:12px;font-weight:400;color:var(--ink-400);font-family:var(--sans)}
+.strip__n{font-size:10.5px;color:var(--ink-400);font-weight:400;margin-top:2px;line-height:1.5}
+.strip__n b{color:var(--bark-600);font-weight:600}
+
+/* ---------- cards ---------- */
+.card{background:var(--paper);border:1px solid var(--rule);padding:var(--md2)}
+.card__t{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--forest-800);margin-bottom:3px}
+.card__s{font-size:12px;color:var(--ink-400);font-weight:400;line-height:1.6}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sm2)}
+.g-2-1{display:grid;grid-template-columns:1.5fr 1fr;gap:var(--sm2)}
+
+/* ---------- priority queue ---------- */
+.att{background:var(--paper);border:1px solid var(--rule)}
+.att__row{display:flex;gap:var(--md);padding:var(--md) var(--md2);border-bottom:1px solid var(--rule-soft);
+  align-items:flex-start}
+.att__row:last-child{border-bottom:0}
+.att__row:hover{background:var(--forest-050)}
+.sev{width:3px;align-self:stretch;flex-shrink:0;border-radius:2px}
+.sev--p0{background:var(--rust-500)} .sev--p1{background:var(--ochre-500)} .sev--p2{background:var(--forest-400)}
+.att__b{flex:1;min-width:0}
+.att__tag{display:inline-block;font-size:9px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;
+  padding:2px 7px;margin-bottom:6px;margin-right:4px}
+.tag--p0{background:var(--rust-100);color:var(--rust-600)}
+.tag--p1{background:var(--ochre-100);color:var(--ochre-600)}
+.tag--p2{background:var(--forest-100);color:var(--forest-700)}
+.tag--det{background:var(--moss-100);color:var(--forest-700)}
+.att__t{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--forest-800);line-height:1.4}
+.att__d{font-size:12.5px;color:var(--ink-600);font-weight:400;line-height:1.65;margin-top:4px}
+.att__m{font-size:11px;color:var(--ink-400);font-weight:400;margin-top:6px}
+.att__a{display:flex;gap:var(--sm);flex-shrink:0;flex-wrap:wrap;max-width:290px;justify-content:flex-end}
+
+/* ---------- buttons ---------- */
+.btn{font-family:var(--sans);font-size:12px;font-weight:500;padding:6px 13px;border-radius:3px;
+  border:1px solid var(--forest-200);background:var(--paper);color:var(--forest-700);
+  cursor:pointer;white-space:nowrap;line-height:1.6;transition:.12s}
+.btn:hover{background:var(--forest-050);border-color:var(--forest-400)}
+.btn--go{background:var(--forest-700);border-color:var(--forest-700);color:#fff}
+.btn--go:hover{background:var(--forest-600);border-color:var(--forest-600)}
+.btn--urgent{background:var(--rust-500);border-color:var(--rust-500);color:#fff}
+.btn--urgent:hover{background:var(--rust-600);border-color:var(--rust-600)}
+.btn--ghost{border-color:var(--rule);color:var(--ink-400)}
+.btn--ghost:hover{color:var(--forest-700);background:var(--parchment-2)}
+.btn--sm{font-size:11px;padding:4px 10px}
+
+/* ---------- chips / tabs ---------- */
+.chips{display:flex;gap:var(--sm);flex-wrap:wrap}
+.chip{font-family:var(--sans);font-size:11.5px;font-weight:500;padding:4px 12px;border-radius:20px;
+  border:1px solid var(--rule);background:var(--paper);color:var(--ink-400);cursor:pointer}
+.chip.on{background:var(--forest-700);border-color:var(--forest-700);color:#fff}
+.tabs{display:flex;gap:var(--lg);border-bottom:1px solid var(--rule);margin-bottom:var(--md2)}
+.tabs button{font-family:var(--sans);font-size:13.5px;font-weight:500;padding:0 0 9px;border:0;
+  background:none;color:var(--ink-400);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--forest-800);border-bottom-color:var(--bark-500);font-weight:600}
+
+/* ---------- enclosure cards ---------- */
+.encgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:var(--sm2)}
+.enc{background:var(--paper);border:1px solid var(--rule);padding:var(--md);cursor:pointer;
+  transition:.13s;border-top:3px solid var(--forest-300)}
+.enc:hover{box-shadow:0 3px 14px rgba(28,51,40,.12);transform:translateY(-1px)}
+.enc--alert{border-top-color:var(--rust-500)} .enc--watch{border-top-color:var(--ochre-500)}
+.enc--ok{border-top-color:var(--moss-500)}
+.enc__h{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sm)}
+.enc__n{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--forest-800);line-height:1.3}
+.enc__sp{font-size:11.5px;color:var(--ink-400);font-weight:400;font-style:italic}
+.enc__st{font-size:9px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;padding:2px 7px;white-space:nowrap}
+.st--alert{background:var(--rust-100);color:var(--rust-600)}
+.st--watch{background:var(--ochre-100);color:var(--ochre-600)}
+.st--ok{background:var(--moss-100);color:var(--forest-700)}
+.enc__met{display:flex;gap:var(--md);margin-top:var(--sm2);padding-top:var(--sm2);
+  border-top:1px solid var(--rule-soft)}
+.enc__met div{flex:1}
+.enc__ml{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--ink-400)}
+.enc__mv{font-size:14px;font-weight:600;color:var(--forest-800);margin-top:2px}
+.enc__note{font-size:11.5px;color:var(--ink-600);font-weight:400;line-height:1.6;margin-top:var(--sm2);
+  padding-top:var(--sm2);border-top:1px solid var(--rule-soft)}
+.enc__note b{color:var(--bark-500);font-weight:600;font-size:9.5px;letter-spacing:.9px;
+  text-transform:uppercase;display:block;margin-bottom:3px}
+
+/* ---------- recommendation ---------- */
+.adv{background:var(--paper);border:1px solid var(--rule);padding:var(--md2);margin-bottom:var(--sm2);
+  border-left:3px solid var(--forest-500)}
+.adv--p0{border-left-color:var(--rust-500)} .adv--p1{border-left-color:var(--ochre-500)}
+.adv__t{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--forest-800);line-height:1.4}
+.adv__meta{display:flex;gap:var(--sm);align-items:center;flex-wrap:wrap;margin-top:var(--sm)}
+.conf{font-size:10px;font-weight:600;letter-spacing:.5px;padding:2px 8px;
+  background:var(--forest-100);color:var(--forest-700)}
+.conf--hi{background:var(--moss-100);color:var(--forest-700)}
+.worth{font-size:11.5px;font-weight:600;color:var(--bark-600)}
+.adv__d{font-size:13px;color:var(--ink-600);font-weight:400;line-height:1.7;margin-top:var(--sm2)}
+.why{margin-top:var(--sm2)}
+.why__btn{font-family:var(--sans);font-size:11.5px;font-weight:500;color:var(--forest-600);
+  background:none;border:0;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.why__body{display:none;margin-top:var(--sm2);padding:var(--sm2) var(--md);background:var(--forest-050);
+  border:1px solid var(--forest-100);font-size:12px;color:var(--ink-600);font-weight:400;line-height:1.75}
+.why__body.on{display:block}
+.why__body ul{margin:var(--sm) 0 0 var(--md)} .why__body li{margin-bottom:3px}
+.why__body b{color:var(--forest-800)}
+.adv__f{display:flex;justify-content:space-between;align-items:center;gap:var(--md);margin-top:var(--md);
+  padding-top:var(--sm2);border-top:1px solid var(--rule-soft);flex-wrap:wrap}
+.adv__acts{display:flex;gap:var(--sm);flex-wrap:wrap}
+.disp{display:flex;gap:var(--sm);align-items:center}
+.disp span{font-size:9.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--ink-400)}
+
+/* ---------- meter ---------- */
+.meter{display:flex;align-items:center;gap:var(--sm2)}
+.meter__bar{width:150px;height:6px;background:var(--rule-soft);border-radius:3px;overflow:hidden}
+.meter__fill{height:100%;background:var(--forest-500)}
+.meter__t{font-size:11.5px;color:var(--ink-400);font-weight:400}
+.meter__t b{color:var(--forest-800);font-weight:600}
+
+/* ---------- table ---------- */
+table{width:100%;border-collapse:collapse;background:var(--paper)}
+th{font-size:9.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-400);
+  text-align:left;padding:10px var(--md);border-bottom:1px solid var(--rule);background:var(--parchment-2)}
+td{padding:11px var(--md);border-bottom:1px solid var(--rule-soft);font-size:13px;color:var(--ink-600);font-weight:400}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right} td.num{font-variant-numeric:tabular-nums}
+td b{color:var(--forest-800);font-weight:600}
+
+/* ---------- bars ---------- */
+.dw{display:flex;align-items:center;gap:var(--sm2);margin-bottom:var(--sm2)}
+.dw__n{width:172px;flex-shrink:0;font-size:12.5px;color:var(--ink-700);font-weight:400}
+.dw__t{flex:1;height:19px;background:var(--parchment-2);position:relative;border-radius:2px;overflow:hidden}
+.dw__f{height:100%;background:var(--forest-500);border-radius:2px}
+.dw__f--hi{background:var(--forest-700)}
+.dw__v{width:90px;flex-shrink:0;text-align:right;font-size:12px;color:var(--ink-400);font-weight:500;
+  font-variant-numeric:tabular-nums}
+
+/* ---------- impact list ---------- */
+.imp{display:flex;gap:var(--sm2);padding:var(--sm2) 0;border-bottom:1px solid var(--rule-soft);align-items:flex-start}
+.imp:last-child{border-bottom:0}
+.imp__v{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--bark-600);flex-shrink:0;
+  width:82px;line-height:1.3}
+.imp__x{font-size:12px;color:var(--ink-600);font-weight:400;line-height:1.6}
+.imp__x b{color:var(--forest-800);font-weight:600;display:block;font-size:12.5px}
+
+/* ---------- modal ---------- */
+.scrim{display:none;position:fixed;inset:0;background:rgba(28,51,40,.44);z-index:90;padding:var(--xl);overflow-y:auto}
+.scrim.on{display:block}
+.sheet{background:var(--parchment);max-width:1040px;margin:0 auto;border:1px solid var(--rule);
+  box-shadow:0 16px 50px rgba(28,51,40,.3)}
+.sheet__h{background:var(--forest-800);color:#fff;padding:var(--md2) var(--lg);display:flex;
+  justify-content:space-between;align-items:flex-start;gap:var(--md);position:sticky;top:0;z-index:5}
+.sheet__t{font-family:var(--serif);font-size:23px;font-weight:600;line-height:1.25}
+.sheet__s{font-size:12.5px;color:var(--forest-200);font-weight:400;font-style:italic;margin-top:3px}
+.sheet__x{font-family:var(--sans);font-size:12px;font-weight:500;background:rgba(255,255,255,.14);
+  color:#fff;border:0;padding:6px 13px;border-radius:3px;cursor:pointer}
+.sheet__x:hover{background:rgba(255,255,255,.24)}
+.sheet__b{padding:var(--lg)}
+
+/* ---------- timeline ---------- */
+.tl{position:relative;padding-left:var(--md2)}
+.tl::before{content:'';position:absolute;left:4px;top:5px;bottom:5px;width:1px;background:var(--forest-200)}
+.tl__i{position:relative;padding-bottom:var(--md)}
+.tl__i:last-child{padding-bottom:0}
+.tl__i::before{content:'';position:absolute;left:calc(var(--md2) * -1 + 1px);top:5px;width:7px;height:7px;
+  border-radius:50%;background:var(--forest-400);box-shadow:0 0 0 2.5px var(--parchment)}
+.tl__i--alert::before{background:var(--rust-500)} .tl__i--ok::before{background:var(--moss-500)}
+.tl__d{font-size:9.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--bark-500)}
+.tl__t{font-size:13px;font-weight:600;color:var(--forest-800);margin-top:2px}
+.tl__x{font-size:12px;color:var(--ink-600);font-weight:400;line-height:1.65;margin-top:2px}
+
+/* ---------- gate ---------- */
+.gate{display:flex;justify-content:space-between;align-items:center;gap:var(--md);background:var(--rust-100);
+  border:1px solid var(--rust-200);padding:var(--sm2) var(--md);margin-top:var(--sm2)}
+.gate__t{font-size:12.5px;font-weight:600;color:var(--rust-600)}
+.gate__s{font-size:11.5px;color:var(--ink-600);font-weight:400;margin-top:2px;line-height:1.6}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;bottom:var(--lg);left:50%;transform:translateX(-50%) translateY(150%);
+  background:var(--forest-900);color:#fff;padding:var(--sm2) var(--md2);font-size:13px;font-weight:400;
+  z-index:120;transition:transform .26s cubic-bezier(.2,.8,.3,1);box-shadow:0 8px 26px rgba(28,51,40,.34);
+  max-width:580px;border-left:3px solid var(--bark-400)}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.toast b{font-weight:600}
+
+.note{font-size:11.5px;color:var(--ink-400);font-weight:400;line-height:1.7;margin-top:var(--sm2);
+  padding-left:var(--sm2);border-left:2px solid var(--bark-200)}
+.legend{display:flex;gap:var(--md);flex-wrap:wrap;margin-top:var(--sm2)}
+.legend span{font-size:11px;color:var(--ink-400);font-weight:400;display:flex;align-items:center;gap:5px}
+.sw{width:11px;height:11px;border-radius:2px;display:inline-block}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand__mark">The Steward</div>
+      <div class="brand__sub">Von Digitalis Estates</div>
+    </div>
+
+    <div class="navgrp"><div class="navgrp__t">Estate</div></div>
+    <nav class="nav">
+      <a class="on" data-go="today" data-roles="cok">Today <span class="pip">2</span></a>
+      <a data-go="visitors" data-roles="co">Visitors &amp; Footfall</a>
+      <a data-go="pl" data-roles="c">Money by Zone</a>
+    </nav>
+
+    <div class="navgrp"><div class="navgrp__t">Collections</div></div>
+    <nav class="nav">
+      <a data-go="collections" data-roles="cok">Animals &amp; Aquatics <span class="pip">2</span></a>
+      <a data-go="gardens" data-roles="ck">Gardens</a>
+      <a data-go="park" data-roles="co">Adventure Park <span class="pip pip--calm">1</span></a>
+    </nav>
+
+    <div class="navgrp"><div class="navgrp__t">Intelligence</div></div>
+    <nav class="nav">
+      <a data-go="advisories" data-roles="cok">Recommendations <span class="pip pip--calm">7</span></a>
+      <a data-go="health" data-roles="co">System Health</a>
+    </nav>
+
+    <div class="side-foot">
+      Sensors <b>268 / 274</b> online<br/>
+      Edge nodes <b>7 / 7</b> reporting<br/>
+      Last full sync <b>2 min ago</b>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar__l">
+        <h1 id="ttl">Today at the Estate</h1>
+        <p id="sub">Wednesday, 16 September 2026 · Open 09:00–18:00 · Light cloud, 19°C</p>
+      </div>
+      <div class="topbar__r">
+        <div class="sync"><span class="dot dot--ok" id="aidot"></span><span id="aitxt">AI layer nominal</span></div>
+        <button class="btn btn--ghost btn--sm" onclick="degrade()">Simulate AI outage</button>
+        <div class="roles">
+          <button class="on" onclick="setRole(this,'Countess')">Countess</button>
+          <button onclick="setRole(this,'Operations')">Operations</button>
+          <button onclick="setRole(this,'Keeper')">Keeper</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <div class="banner" id="banner">
+        <div>
+          <b>AI detection layer degraded — the estate is running on deterministic sensing alone.</b>
+          <p>Breach detection, welfare anomaly scoring and wait-time prediction are unavailable. Barrier contacts, float switches, tripwires and threshold alarms are unaffected and continue to protect the estate. Operations has been notified to increase staffing on Zones 3, 7 and 11. Nothing has been silently disabled.</p>
+        </div>
+      </div>
+
+      <!-- ============ TODAY ============ -->
+      <section class="screen on" id="s-today">
+
+        <div class="ey" id="kpi-ey">Money made today</div>
+        <div class="kpis" id="kpi-c">
+          <div class="kpi kpi--money">
+            <div class="kpi__l">Revenue today</div>
+            <div class="kpi__v">$73,980</div>
+            <div class="kpi__d up">▲ 11.4% vs last Wednesday</div>
+            <div class="kpi__n">Admission $49,980 · in-estate $24,000</div>
+          </div>
+          <div class="kpi kpi--money">
+            <div class="kpi__l">Kept after costs</div>
+            <div class="kpi__v">$26,560</div>
+            <div class="kpi__d up">▲ 9.1% vs last Wednesday</div>
+            <div class="kpi__n">Revenue less staff, feed, energy, maintenance</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__l">Visitors today</div>
+            <div class="kpi__v">2,840</div>
+            <div class="kpi__d up">▲ 12.3% vs last Wednesday</div>
+            <div class="kpi__n">Gates close 18:00 · about 480 still expected</div>
+          </div>
+          <div class="kpi kpi--money">
+            <div class="kpi__l">Spent per visitor, inside the gate</div>
+            <div class="kpi__v">$8.45</div>
+            <div class="kpi__d up">▲ $0.60 since the carts moved</div>
+            <div class="kpi__n">Food and retail only — excludes admission</div>
+          </div>
+        </div>
+
+        <div class="kpis" id="kpi-o" style="display:none">
+          <div class="kpi">
+            <div class="kpi__l">On site right now</div>
+            <div class="kpi__v">1,310 <small>of 7,500</small></div>
+            <div class="kpi__d flat">17% of the safety ceiling</div>
+            <div class="kpi__n">Ceiling set by evacuation and welfare limits</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__l">Busiest zone right now</div>
+            <div class="kpi__v">Gnome Grotto</div>
+            <div class="kpi__d down">2.4 people/m² and rising</div>
+            <div class="kpi__n">Predicted to peak at 11:40</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__l">Stewards on shift</div>
+            <div class="kpi__v">24</div>
+            <div class="kpi__d flat">3 reassignable from Zone 2</div>
+            <div class="kpi__n">Rostered to this morning’s forecast</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__l">Rides running</div>
+            <div class="kpi__v">38 <small>of 40</small></div>
+            <div class="kpi__d flat">1 scheduled · 1 awaiting parts</div>
+            <div class="kpi__n">Longest wait 18 min on Ride 07</div>
+          </div>
+        </div>
+
+        <div class="kpis" id="kpi-k" style="display:none">
+          <div class="kpi">
+            <div class="kpi__l">Enclosures on alert</div>
+            <div class="kpi__v" style="color:var(--rust-500)">2 <small>of 55</small></div>
+            <div class="kpi__d down">Tank 12 · Hesper</div>
+            <div class="kpi__n">2 more on watch</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__l">Eating below their normal</div>
+            <div class="kpi__v">4</div>
+            <div class="kpi__d down">Hesper −42% · axolotls −11%</div>
+            <div class="kpi__n">Marguerite −14% · Nepenthes moisture low</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__l">Alerts raised today</div>
+            <div class="kpi__v">7 <small>of 12</small></div>
+            <div class="kpi__d flat">Capped to protect your attention</div>
+            <div class="kpi__n">5 confirmed real · 2 awaiting your verdict</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__l">Feeds due within the hour</div>
+            <div class="kpi__v">6</div>
+            <div class="kpi__d flat">3 aquatic · 3 land</div>
+            <div class="kpi__n">Tank 12 feed held until oxygen recovers</div>
+          </div>
+        </div>
+
+        <div class="strip">
+          <div class="strip__i" data-roles="cok">
+            <div class="strip__l">Needs a decision from you</div>
+            <div class="strip__v">2 <small>today</small></div>
+            <div class="strip__n">Tank 12 oxygen · Hesper welfare. <b>5 more can wait.</b></div>
+          </div>
+          <div class="strip__i" data-roles="ck">
+            <div class="strip__l">On site right now</div>
+            <div class="strip__v">1,310 <small>of 7,500</small></div>
+            <div class="strip__n"><b>7,500 is the safety ceiling</b>, not a target — set by evacuation and welfare limits.</div>
+          </div>
+          <div class="strip__i" data-roles="co">
+            <div class="strip__l">Collection welfare</div>
+            <div class="strip__v">51 <small>of 55 stable</small></div>
+            <div class="strip__n">2 on watch · <b>2 on alert</b> · 55 enclosures monitored</div>
+          </div>
+          <div class="strip__i" data-roles="c">
+            <div class="strip__l">Rides running</div>
+            <div class="strip__v">38 <small>of 40</small></div>
+            <div class="strip__n">1 scheduled maintenance · <b>1 awaiting parts</b></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec__h">
+            <div>
+              <div class="ey">Decisions waiting on you</div>
+              <div class="sec__t">Priority queue</div>
+              <div class="sec__s">Only the first two need a call today. The rest are here so nothing gets lost.</div>
+            </div>
+            <button class="btn btn--ghost" onclick="say('Filtered to the two items that need a decision today.')">Today only</button>
+          </div>
+
+          <div class="att">
+            <div class="att__row" data-roles="cok">
+              <div class="sev sev--p0"></div>
+              <div class="att__b">
+                <span class="att__tag tag--p0">Decide now · Life support</span>
+                <span class="att__tag tag--det">Deterministic sensor</span>
+                <div class="att__t">Aquarium Tank 12 — dissolved oxygen falling</div>
+                <div class="att__d">Oxygen down to 5.1 mg/L from a 7.4 baseline over 40 minutes. Circulation pump B is cycling irregularly. The float switch and threshold alarm both tripped locally — this did not depend on the network or on a model.</div>
+                <div class="att__m">Detected 09:12 · Edge node 4 · Piranha colony · If left, the tank is at risk within about two hours</div>
+              </div>
+              <div class="att__a">
+                <button class="btn btn--urgent" onclick="say('Maintenance crew dispatched to Tank 12. ETA 6 minutes. Backup aeration engaged.')">Dispatch maintenance</button>
+                <button class="btn" onclick="open_('piranha')">Open tank record</button>
+              </div>
+            </div>
+
+            <div class="att__row" data-roles="ck">
+              <div class="sev sev--p1"></div>
+              <div class="att__b">
+                <span class="att__tag tag--p1">Decide today · Welfare</span>
+                <div class="att__t">Hesper (Komodo dragon) — eating 42% less than her own normal</div>
+                <div class="att__d">Third low feed in a row. Resting up 58%, time basking down. Enclosure temperature is in range, so the environment is unlikely to be the cause. Four paid encounters are on hold until someone decides.</div>
+                <div class="att__m">Flagged 07:40 · Enclosure 31 · Keeper note: “Reluctant to leave the shelter, no visible injury.”</div>
+              </div>
+              <div class="att__a">
+                <button class="btn btn--go" onclick="say('Dr. Reddy paged. Hesper added to this morning\u2019s round.')">Escalate to vet</button>
+                <button class="btn" onclick="open_('hesper')">View history</button>
+              </div>
+            </div>
+
+            <div class="att__row" data-roles="co">
+              <div class="sev sev--p1"></div>
+              <div class="att__b">
+                <span class="att__tag tag--p1">Can wait · Crowd</span>
+                <div class="att__t">Gnome Grotto — getting crowded enough to spoil the visit</div>
+                <div class="att__d">2.4 people per square metre and rising, with flow slowing. Expected to reach the comfort threshold in about 25 minutes. Far below any crush risk, but spend per head drops sharply once a zone feels packed.</div>
+                <div class="att__m">Zone 7 · Predicted peak 11:40 · Two food carts sitting idle in Zone 2</div>
+              </div>
+              <div class="att__a">
+                <button class="btn btn--go" onclick="say('3 stewards reassigned to Zone 7 for the 11:00\u201312:30 window.')">Assign staff</button>
+                <button class="btn" onclick="say('Food carts 2 and 5 routed to Gnome Grotto.')">Move food carts</button>
+              </div>
+            </div>
+
+            <div class="att__row" data-roles="co">
+              <div class="sev sev--p2"></div>
+              <div class="att__b">
+                <span class="att__tag tag--p2">Can wait · Asset</span>
+                <div class="att__t">Ride 07 “The Gilded Orbit” — vibration drifting upward</div>
+                <div class="att__d">Bearing-band energy up 18% over fourteen days. Not a safety condition, and the ride stays in service. Booking an inspection on a quiet weekday avoids a forced closure on a peak Saturday, which is when a closure costs most.</div>
+                <div class="att__m">Adventure Park · Suggested window Tuesday 22 Sept · A peak-day closure would cost roughly $9,400</div>
+              </div>
+              <div class="att__a">
+                <button class="btn btn--go" onclick="say('Inspection booked for Tue 22 Sept, 07:00. Ride 07 stays open until then.')">Book inspection</button>
+                <button class="btn btn--ghost" onclick="say('Snoozed for 7 days. It returns if the trend steepens.')">Snooze</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="g-2-1">
+          <div>
+            <div class="card" style="margin-bottom:var(--sm2)">
+              <div class="card__t">Arrivals through the gates today</div>
+              <div class="card__s">Live to 14:00 · the dotted line is the forecast that set this morning’s staff roster</div>
+              <div id="c-today"></div>
+              <div class="note">Forecast error so far today is 4.1% against actuals — scored automatically at close of day and tracked in the Ground Truth Ledger.</div>
+            </div>
+            <div class="card">
+              <div class="card__t">Where today’s money came from</div>
+              <div class="card__s">Against the same point last Wednesday</div>
+              <table style="margin-top:var(--sm2)">
+                <thead><tr><th>Source</th><th class="num">Today</th><th class="num">Last Wednesday</th><th class="num">Change</th></tr></thead>
+                <tbody>
+                  <tr><td><b>Admission &amp; passes</b></td><td class="num">$49,980</td><td class="num">$44,900</td><td class="num"><b style="color:var(--moss-500)">▲ 11.3%</b></td></tr>
+                  <tr><td><b>Food &amp; drink</b></td><td class="num">$13,900</td><td class="num">$11,300</td><td class="num"><b style="color:var(--moss-500)">▲ 23.0%</b></td></tr>
+                  <tr><td><b>Retail &amp; plant sales</b></td><td class="num">$6,140</td><td class="num">$5,180</td><td class="num"><b style="color:var(--moss-500)">▲ 18.5%</b></td></tr>
+                  <tr><td><b>Paid encounters</b></td><td class="num">$2,670</td><td class="num">$3,350</td><td class="num"><b style="color:var(--rust-500)">▼ 20.3%</b></td></tr>
+                  <tr><td><b>Reserved ride slots</b></td><td class="num">$1,290</td><td class="num">$800</td><td class="num"><b style="color:var(--moss-500)">▲ 61.3%</b></td></tr>
+                </tbody>
+              </table>
+              <div class="note">Paid encounters are down because four of Hesper’s bookings were held on welfare grounds. That is the system working as intended, not a shortfall to chase.</div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:var(--sm2)">
+              <div class="card__t">What The Steward earned its keep on</div>
+              <div class="card__s">Value created this week, measured against what would otherwise have happened</div>
+              <div style="margin-top:var(--sm2)">
+                <div class="imp"><div class="imp__v">$8,900</div><div class="imp__x"><b>Emergency vet costs avoided</b>Two welfare catches treated as planned interventions rather than emergencies.</div></div>
+                <div class="imp"><div class="imp__v">$4,320</div><div class="imp__x"><b>Extra in-estate spend</b>From moving food carts toward the zones with the longest dwell.</div></div>
+                <div class="imp"><div class="imp__v">$2,760</div><div class="imp__x"><b>Staffing cost saved</b>34 steward-hours released by rostering to the forecast instead of a flat plan.</div></div>
+                <div class="imp"><div class="imp__v">1</div><div class="imp__x"><b>Life-support incident prevented</b>Tank 12 caught 40 minutes before it would have become critical.</div></div>
+              </div>
+              <div class="note">Each figure is measured against a matched baseline, not asserted. The method is in the Ground Truth Ledger.</div>
+            </div>
+            <div class="card">
+              <div class="card__t">Where people are right now</div>
+              <div style="margin-top:var(--sm2)">
+                <div class="dw"><div class="dw__n" style="width:118px">Adventure Park</div><div class="dw__t"><div class="dw__f" style="width:58%"></div></div><div class="dw__v" style="width:66px">590</div></div>
+                <div class="dw"><div class="dw__n" style="width:118px">Zoo &amp; Aquarium</div><div class="dw__t"><div class="dw__f dw__f--hi" style="width:47%"></div></div><div class="dw__v" style="width:66px">480</div></div>
+                <div class="dw"><div class="dw__n" style="width:118px">Gardens</div><div class="dw__t"><div class="dw__f" style="width:24%"></div></div><div class="dw__v" style="width:66px">240</div></div>
+              </div>
+              <button class="btn" style="width:100%;margin-top:var(--sm2)" onclick="go('collections')">Open welfare board</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VISITORS ============ -->
+      <section class="screen" id="s-visitors">
+        <div class="kpis">
+          <div class="kpi"><div class="kpi__l">Footfall today</div><div class="kpi__v">2,840</div><div class="kpi__d up">▲ 12.3% vs last Wednesday</div></div>
+          <div class="kpi"><div class="kpi__l">Busiest hour at the gates</div><div class="kpi__v">10–11<small> am</small></div><div class="kpi__d flat">470 arrivals in that hour</div></div>
+          <div class="kpi"><div class="kpi__l">Average time on the estate</div><div class="kpi__v">4h 12m</div><div class="kpi__d up">▲ 18 min vs last month</div></div>
+          <div class="kpi"><div class="kpi__l">Visitors who came before</div><div class="kpi__v">23%</div><div class="kpi__d up">▲ 4 pts since memberships launched</div></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec__h"><div><div class="ey">Gate telemetry</div><div class="sec__t">Arrivals by hour at the ticket counters</div>
+            <div class="sec__s">All four gates combined, against the forecast that set today’s roster.</div></div></div>
+          <div class="card"><div id="c-hourly"></div>
+            <div class="legend">
+              <span><i class="sw" style="background:var(--forest-600)"></i>Actual arrivals</span>
+              <span><i class="sw" style="background:var(--forest-200)"></i>Day-ahead forecast</span>
+              <span><i class="sw" style="background:var(--rust-500)"></i>Busiest hour</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="card__t">Weekend against weekday</div>
+            <div class="card__s">Average daily footfall, trailing eight weeks</div>
+            <div id="c-wkend"></div>
+            <div class="note">Weekends run about 2.4× weekdays. Filling weekdays is the cheapest growth available — it needs no new infrastructure, only demand. This is the case for school programmes and off-peak pricing.</div>
+          </div>
+          <div class="card">
+            <div class="card__t">Change over time</div>
+            <div class="card__s">Footfall against the comparable prior period</div>
+            <table style="margin-top:var(--sm2)">
+              <thead><tr><th>Period</th><th class="num">This period</th><th class="num">Prior</th><th class="num">Change</th></tr></thead>
+              <tbody>
+                <tr><td><b>Week</b></td><td class="num">38,410</td><td class="num">35,900</td><td class="num"><b style="color:var(--moss-500)">▲ 7.0%</b></td></tr>
+                <tr><td><b>Month</b></td><td class="num">164,220</td><td class="num">151,780</td><td class="num"><b style="color:var(--moss-500)">▲ 8.2%</b></td></tr>
+                <tr><td><b>Quarter</b></td><td class="num">472,900</td><td class="num">486,100</td><td class="num"><b style="color:var(--rust-500)">▼ 2.7%</b></td></tr>
+              </tbody>
+            </table>
+            <div class="note">The quarter is down only because the prior one contained the summer holidays. Against the same quarter last year, footfall is up 11%.</div>
+          </div>
+        </div>
+
+        <div class="sec" style="margin-top:var(--xl)">
+          <div class="sec__h">
+            <div><div class="ey">Where the day is spent</div><div class="sec__t">Popular spots by time spent</div>
+              <div class="sec__s">Time spent, not headcount — a bottleneck is busy without being popular.</div></div>
+            <button class="btn btn--ghost" onclick="go('pl')">See what each zone earns</button>
+          </div>
+          <div class="card">
+            <div class="dw"><div class="dw__n">Piranha Hall</div><div class="dw__t"><div class="dw__f dw__f--hi" style="width:92%"></div></div><div class="dw__v">31 min avg</div></div>
+            <div class="dw"><div class="dw__n">Carnivorous Glasshouse</div><div class="dw__t"><div class="dw__f dw__f--hi" style="width:79%"></div></div><div class="dw__v">27 min avg</div></div>
+            <div class="dw"><div class="dw__n">The Gilded Orbit (Ride 07)</div><div class="dw__t"><div class="dw__f" style="width:62%"></div></div><div class="dw__v">21 min avg</div></div>
+            <div class="dw"><div class="dw__n">Venom House</div><div class="dw__t"><div class="dw__f" style="width:56%"></div></div><div class="dw__v">19 min avg</div></div>
+            <div class="dw"><div class="dw__n">Gnome Grotto</div><div class="dw__t"><div class="dw__f" style="width:44%"></div></div><div class="dw__v">15 min avg</div></div>
+            <div class="dw"><div class="dw__n">Orangery Tea Room</div><div class="dw__t"><div class="dw__f" style="width:38%"></div></div><div class="dw__v">13 min avg</div></div>
+            <div class="dw"><div class="dw__n">West Lawn</div><div class="dw__t"><div class="dw__f" style="width:18%"></div></div><div class="dw__v">6 min avg</div></div>
+            <div class="note">Piranha Hall and the Glasshouse hold attention longest, and both sit far from anywhere to spend money. That gap is the clearest revenue opportunity on the estate today.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ COLLECTIONS ============ -->
+      <section class="screen" id="s-collections">
+        <div class="tabs">
+          <button class="on" onclick="tab(this,'land')">Land animals · 32</button>
+          <button onclick="tab(this,'aqua')">Aquatic · 18</button>
+          <button onclick="tab(this,'plants')">Plant collections · 5</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--md);margin-bottom:var(--md2);flex-wrap:wrap">
+          <div class="chips">
+            <button class="chip on" onclick="chip(this)">All enclosures</button>
+            <button class="chip" onclick="chip(this)">Needs attention · 4</button>
+            <button class="chip" onclick="chip(this)">Tier 1 only</button>
+            <button class="chip" onclick="chip(this)">Fed today</button>
+          </div>
+          <div class="meter">
+            <span class="meter__t">Keeper alerts raised today</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:58%"></div></div>
+            <span class="meter__t"><b>7</b> of 12 · capped to protect attention</span>
+          </div>
+        </div>
+
+        <div class="encgrid" id="enc-land">
+          <div class="enc enc--alert" onclick="open_('hesper')">
+            <div class="enc__h"><div><div class="enc__n">Hesper</div><div class="enc__sp">Varanus komodoensis · Enc. 31 · Tier 1</div></div><span class="enc__st st--alert">Alert</span></div>
+            <div class="enc__met">
+              <div><div class="enc__ml">Eating</div><div class="enc__mv" style="color:var(--rust-500)">−42%</div></div>
+              <div><div class="enc__ml">Activity</div><div class="enc__mv" style="color:var(--rust-500)">−31%</div></div>
+              <div><div class="enc__ml">Weight</div><div class="enc__mv">78.4 kg</div></div>
+            </div>
+            <div class="enc__note"><b>Keeper note · 07:40</b>Reluctant to leave the shelter, no visible injury. Third low feed running.</div>
+          </div>
+          <div class="enc enc--watch" onclick="say('Opening record for Marguerite.')">
+            <div class="enc__h"><div><div class="enc__n">Marguerite</div><div class="enc__sp">Ara ararauna · Enc. 14 · Tier 2</div></div><span class="enc__st st--watch">Watch</span></div>
+            <div class="enc__met">
+              <div><div class="enc__ml">Eating</div><div class="enc__mv" style="color:var(--ochre-600)">−14%</div></div>
+              <div><div class="enc__ml">Calling</div><div class="enc__mv" style="color:var(--ochre-600)">−22%</div></div>
+              <div><div class="enc__ml">Weight</div><div class="enc__mv">1.09 kg</div></div>
+            </div>
+            <div class="enc__note"><b>Keeper note · yesterday</b>Quieter than usual but alert and perching normally. Watching.</div>
+          </div>
+          <div class="enc enc--ok" onclick="say('Opening record for the day gecko group.')">
+            <div class="enc__h"><div><div class="enc__n">Day gecko group</div><div class="enc__sp">Phelsuma grandis ×6 · Enc. 22 · Tier 2</div></div><span class="enc__st st--ok">Stable</span></div>
+            <div class="enc__met">
+              <div><div class="enc__ml">Eating</div><div class="enc__mv" style="color:var(--moss-500)">+3%</div></div>
+              <div><div class="enc__ml">Activity</div><div class="enc__mv">Normal</div></div>
+              <div><div class="enc__ml">Tracking</div><div class="enc__mv">By markings</div></div>
+            </div>
+            <div class="enc__note"><b>Keeper note · today</b>All six sighted at morning check. Shedding on individual 4, normal cycle.</div>
+          </div>
+          <div class="enc enc--ok" onclick="say('Opening record for Bertram.')">
+            <div class="enc__h"><div><div class="enc__n">Bertram</div><div class="enc__sp">Heloderma suspectum · Enc. 29 · Tier 1</div></div><span class="enc__st st--ok">Stable</span></div>
+            <div class="enc__met">
+              <div><div class="enc__ml">Eating</div><div class="enc__mv" style="color:var(--moss-500)">+1%</div></div>
+              <div><div class="enc__ml">Basking</div><div class="enc__mv">Normal</div></div>
+              <div><div class="enc__ml">Weight</div><div class="enc__mv">2.31 kg</div></div>
+            </div>
+            <div class="enc__note"><b>Keeper note · today</b>Fed on schedule. Gradient holding 26–38°C across the enclosure.</div>
+          </div>
+        </div>
+
+        <div class="encgrid" id="enc-aqua" style="display:none">
+          <div class="enc enc--alert" onclick="open_('piranha')">
+            <div class="enc__h"><div><div class="enc__n">Jumping piranha colony</div><div class="enc__sp">Serrasalmus sp. · Tank 12 · Tier 1</div></div><span class="enc__st st--alert">Alert</span></div>
+            <div class="enc__met">
+              <div><div class="enc__ml">How many</div><div class="enc__mv">38–44</div></div>
+              <div><div class="enc__ml">Oxygen</div><div class="enc__mv" style="color:var(--rust-500)">5.1 mg/L</div></div>
+              <div><div class="enc__ml">Feeding</div><div class="enc__mv" style="color:var(--ochre-600)">Sluggish</div></div>
+            </div>
+            <div class="enc__note"><b>Life support · 09:12</b>Oxygen falling, pump B irregular. Local alarm tripped, maintenance not yet dispatched.</div>
+          </div>
+          <div class="enc enc--ok" onclick="say('Opening record for Tank 3.')">
+            <div class="enc__h"><div><div class="enc__n">Reef community</div><div class="enc__sp">Mixed · Tank 3 · Tier 2</div></div><span class="enc__st st--ok">Stable</span></div>
+            <div class="enc__met">
+              <div><div class="enc__ml">Oxygen</div><div class="enc__mv" style="color:var(--moss-500)">7.6 mg/L</div></div>
+              <div><div class="enc__ml">Ammonia</div><div class="enc__mv">0.01 ppm</div></div>
+              <div><div class="enc__ml">Uneaten food</div><div class="enc__mv">Low</div></div>
+            </div>
+            <div class="enc__note"><b>Keeper note · today</b>Feed response strong across the tank. Skimmer serviced Tuesday.</div>
+          </div>
+          <div class="enc enc--watch" onclick="say('Opening record for Tank 8.')">
+            <div class="enc__h"><div><div class="enc__n">Axolotl group</div><div class="enc__sp">Ambystoma mexicanum ×4 · Tank 8 · Tier 1</div></div><span class="enc__st st--watch">Watch</span></div>
+            <div class="enc__met">
+              <div><div class="enc__ml">Water temp</div><div class="enc__mv" style="color:var(--ochre-600)">20.4 °C</div></div>
+              <div><div class="enc__ml">Eating</div><div class="enc__mv" style="color:var(--ochre-600)">−11%</div></div>
+              <div><div class="enc__ml">Nitrite</div><div class="enc__mv">0.00 ppm</div></div>
+            </div>
+            <div class="enc__note"><b>Keeper note · today</b>Temperature drifting to the top of the acceptable band. Chiller checked, monitoring.</div>
+          </div>
+        </div>
+
+        <div class="encgrid" id="enc-plants" style="display:none">
+          <div class="enc enc--watch" onclick="say('Opening record for the Nepenthes collection.')">
+            <div class="enc__h"><div><div class="enc__n">Nepenthes collection</div><div class="enc__sp">Glasshouse 2 · 41 specimens · Tier 1</div></div><span class="enc__st st--watch">Watch</span></div>
+            <div class="enc__met">
+              <div><div class="enc__ml">Moisture</div><div class="enc__mv" style="color:var(--ochre-600)">Low</div></div>
+              <div><div class="enc__ml">Humidity</div><div class="enc__mv">71%</div></div>
+              <div><div class="enc__ml">Pitchers</div><div class="enc__mv">Fair</div></div>
+            </div>
+            <div class="enc__note"><b>Horticulturist · today</b>Bench 3 drying faster than the rest — suspect a partly blocked irrigation line.</div>
+          </div>
+          <div class="enc enc--ok" onclick="say('Opening record for the Dionaea beds.')">
+            <div class="enc__h"><div><div class="enc__n">Venus flytrap beds</div><div class="enc__sp">Dionaea muscipula · Glasshouse 1 · Tier 2</div></div><span class="enc__st st--ok">Stable</span></div>
+            <div class="enc__met">
+              <div><div class="enc__ml">Moisture</div><div class="enc__mv" style="color:var(--moss-500)">Good</div></div>
+              <div><div class="enc__ml">Daylight</div><div class="enc__mv">On schedule</div></div>
+              <div><div class="enc__ml">To sell</div><div class="enc__mv">120 ready</div></div>
+            </div>
+            <div class="enc__note"><b>Horticulturist · today</b>120 propagated plants ready for the shop. Next division due in three weeks.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ GARDENS ============ -->
+      <section class="screen" id="s-gardens">
+        <div class="kpis">
+          <div class="kpi"><div class="kpi__l">Specimens monitored</div><div class="kpi__v">318</div><div class="kpi__d flat">Across 5 glasshouses and beds</div></div>
+          <div class="kpi kpi--money"><div class="kpi__l">Plants ready to sell</div><div class="kpi__v">284</div><div class="kpi__d up">▲ 46 this month · about $6,200</div></div>
+          <div class="kpi"><div class="kpi__l">Glasshouse alerts</div><div class="kpi__v">1</div><div class="kpi__d flat">Irrigation, Glasshouse 2</div></div>
+          <div class="kpi"><div class="kpi__l">Visitors to the Gardens</div><div class="kpi__v">240</div><div class="kpi__d up">▲ 8% vs last Wednesday</div></div>
+        </div>
+        <div class="card">
+          <div class="card__t">The collection the family planned to sell</div>
+          <div class="card__s">Propagation stock and readiness — this is a production asset, not only a display</div>
+          <table style="margin-top:var(--md)">
+            <thead><tr><th>Collection</th><th>Location</th><th class="num">Specimens</th><th class="num">Ready to sell</th><th>Condition</th></tr></thead>
+            <tbody>
+              <tr><td><b>Nepenthes</b></td><td>Glasshouse 2</td><td class="num">41</td><td class="num">62</td><td style="color:var(--ochre-600)">Watch — irrigation</td></tr>
+              <tr><td><b>Dionaea muscipula</b></td><td>Glasshouse 1</td><td class="num">96</td><td class="num">120</td><td style="color:var(--moss-500)">Stable</td></tr>
+              <tr><td><b>Sarracenia</b></td><td>Bog Garden</td><td class="num">124</td><td class="num">78</td><td style="color:var(--moss-500)">Stable</td></tr>
+              <tr><td><b>Drosera</b></td><td>Glasshouse 3</td><td class="num">57</td><td class="num">24</td><td style="color:var(--moss-500)">Stable</td></tr>
+            </tbody>
+          </table>
+          <div class="note">The gardens have the lowest cost of care and the highest margin of the three domains. 284 sale-ready plants is roughly $6,200 of stock sitting on a bench.</div>
+        </div>
+      </section>
+
+      <!-- ============ PARK ============ -->
+      <section class="screen" id="s-park">
+        <div class="kpis">
+          <div class="kpi"><div class="kpi__l">Rides operating</div><div class="kpi__v">38 <small>of 40</small></div><div class="kpi__d flat">1 scheduled · 1 awaiting parts</div></div>
+          <div class="kpi"><div class="kpi__l">Longest wait now</div><div class="kpi__v">18<small> min</small></div><div class="kpi__d down">The Gilded Orbit</div></div>
+          <div class="kpi"><div class="kpi__l">Rides taken today</div><div class="kpi__v">8,010</div><div class="kpi__d up">▲ 5.4% vs last Wednesday</div></div>
+          <div class="kpi kpi--money"><div class="kpi__l">Reserved slots sold</div><div class="kpi__v">$1,290</div><div class="kpi__d up">161 slots · pure margin</div></div>
+        </div>
+        <div class="card" style="margin-bottom:var(--sm2)">
+          <div class="card__t">Predicted waits, next 30 minutes</div>
+          <div class="card__s">Used by the visitor app to route people away from congestion, and by Operations to place staff</div>
+          <div id="c-wait"></div>
+          <div class="note">Every prediction is scored against the real wait when the visitor reaches the front of the queue. Today’s rolling error is 3.4 minutes.</div>
+        </div>
+        <div class="card">
+          <div class="card__t">Rides needing a decision</div>
+          <table style="margin-top:var(--md)">
+            <thead><tr><th>Ride</th><th>Status</th><th>What we are seeing</th><th class="num">Action</th></tr></thead>
+            <tbody>
+              <tr><td><b>07 · The Gilded Orbit</b></td><td style="color:var(--ochre-600)">Open — watch</td><td>Bearing vibration up 18% over 14 days · a peak-day closure would cost about $9,400</td><td class="num"><button class="btn btn--sm btn--go" onclick="say('Inspection booked for Tue 22 Sept, 07:00.')">Book inspection</button></td></tr>
+              <tr><td><b>22 · Countess’s Carousel</b></td><td style="color:var(--rust-500)">Closed</td><td>Awaiting a replacement drive belt, due Monday · roughly $1,100 lost per day</td><td class="num"><button class="btn btn--sm" onclick="say('Supplier chased. Delivery confirmed for Monday 09:00.')">Chase supplier</button></td></tr>
+              <tr><td><b>15 · Gnome Flyer</b></td><td style="color:var(--moss-500)">Open</td><td>Queue consistently under capacity since 11:00 — spare throughput available</td><td class="num"><button class="btn btn--sm" onclick="say('Ride 15 added to the app\u2019s \u201cshort wait right now\u201d list.')">Promote in app</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ RECOMMENDATIONS ============ -->
+      <section class="screen" id="s-advisories">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--md);margin-bottom:var(--md2);flex-wrap:wrap">
+          <div class="chips">
+            <button class="chip on" onclick="chip(this)">All · 7</button>
+            <button class="chip" onclick="chip(this)">Welfare · 3</button>
+            <button class="chip" onclick="chip(this)">Operations · 2</button>
+            <button class="chip" onclick="chip(this)">Money · 2</button>
+          </div>
+          <div class="meter">
+            <span class="meter__t">Raised today</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:58%"></div></div>
+            <span class="meter__t"><b>7</b> of 12 · capped so this stays worth reading</span>
+          </div>
+        </div>
+
+        <div class="adv adv--p1">
+          <div class="adv__t">Move two food carts to Piranha Hall for the 11:00–14:00 window</div>
+          <div class="adv__meta">
+            <span class="att__tag tag--p1" style="margin:0">Money</span>
+            <span class="conf conf--hi">Confidence: high</span>
+            <span class="worth">Worth an estimated $640–$900 today</span>
+          </div>
+          <div class="adv__d">Piranha Hall holds visitors longer than any other zone at 31 minutes, and the nearest refreshment is a seven-minute walk away. Two carts are sitting idle in Zone 2, which is running at 34% of its usual footfall.</div>
+          <div class="why">
+            <button class="why__btn" onclick="why(this)">Why is this being suggested?</button>
+            <div class="why__body">
+              <b>What this is based on</b>
+              <ul>
+                <li>Time spent by zone over the last 14 days, from occupancy sensors across 8 zones</li>
+                <li>Till location data and walking distance to the nearest outlet</li>
+                <li>Cart positions today — carts 2 and 5 idle since 10:20</li>
+                <li>The same move on 30 August produced $710 in additional spend</li>
+              </ul>
+              <b style="display:block;margin-top:8px">Model</b> Zone-spend uplift estimator v4.2 · self-hosted · last checked 11 Sept, within thresholds.
+              <b style="display:block;margin-top:8px">How we will know if it worked</b> Spend in Piranha Hall over the window, compared against matched Saturdays with no cart present.
+            </div>
+          </div>
+          <div class="adv__f">
+            <div class="adv__acts">
+              <button class="btn btn--go" onclick="say('Carts 2 and 5 routed to Piranha Hall for 11:00\u201314:00.')">Move the carts</button>
+              <button class="btn" onclick="say('Saved as a standing arrangement for Saturdays.')">Make it a standing rule</button>
+            </div>
+            <div class="disp"><span>Was this useful?</span>
+              <button class="btn btn--sm" onclick="disp(this,'Accepted')">Yes</button>
+              <button class="btn btn--sm btn--ghost" onclick="disp(this,'Dismissed')">No</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="adv adv--p0">
+          <div class="adv__t">Hold Hesper’s paid encounters until the vet has seen her</div>
+          <div class="adv__meta">
+            <span class="att__tag tag--p0" style="margin:0">Welfare</span>
+            <span class="conf conf--hi">Confidence: high</span>
+            <span class="worth">4 bookings · $320 refundable</span>
+          </div>
+          <div class="adv__d">Hesper has eaten 42% below her own normal for a third consecutive feed, and her activity is down 31%. Paid encounters are welfare-gated: when an animal is outside its baseline the session does not run, whatever the revenue.</div>
+          <div class="why">
+            <button class="why__btn" onclick="why(this)">Why is this being suggested?</button>
+            <div class="why__body">
+              <b>What this is based on</b>
+              <ul>
+                <li>Feeding-station weight readings for Enclosure 31 against her own 14-day baseline</li>
+                <li>Camera-derived activity — resting up 58%, time basking down</li>
+                <li>Keeper note at 07:40 — reluctant to leave the shelter</li>
+                <li>Enclosure temperature in range, so environment is unlikely to be the cause</li>
+              </ul>
+              <b style="display:block;margin-top:8px">Model</b> Welfare baseline deviation v6.1 · self-hosted and version-pinned · correct 71% of the time over the last 30 days.
+              <b style="display:block;margin-top:8px">This is advice, not a diagnosis</b> The keeper and the vet decide what happens.
+            </div>
+          </div>
+          <div class="adv__f">
+            <div class="adv__acts">
+              <button class="btn btn--urgent" onclick="say('Bookings held and refunded. Guests offered the Venom House encounter instead.')">Hold the bookings</button>
+              <button class="btn" onclick="open_('hesper')">Open Hesper’s record</button>
+            </div>
+            <div class="disp"><span>Was this useful?</span>
+              <button class="btn btn--sm" onclick="disp(this,'Accepted')">Yes</button>
+              <button class="btn btn--sm btn--ghost" onclick="disp(this,'Dismissed')">No</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="adv">
+          <div class="adv__t">Roster three fewer stewards next Tuesday and Wednesday</div>
+          <div class="adv__meta">
+            <span class="att__tag tag--p2" style="margin:0">Operations</span>
+            <span class="conf">Confidence: moderate</span>
+            <span class="worth">About $560 saved across the two days</span>
+          </div>
+          <div class="adv__d">The forecast puts both days 22% below the weekday average, driven by expected rain and the end of the local school holiday. The roster is currently flat across every weekday.</div>
+          <div class="why">
+            <button class="why__btn" onclick="why(this)">Why is this being suggested?</button>
+            <div class="why__body">
+              <b>What this is based on</b>
+              <ul>
+                <li>Day-ahead attendance forecast, scored daily against actuals — current error 4.6%</li>
+                <li>Weather feed and the regional school calendar</li>
+                <li>Current roster against predicted demand by zone</li>
+              </ul>
+              <b style="display:block;margin-top:8px">Worth knowing</b> Confidence is only moderate because rain forecasts five days out are unreliable. Better to confirm on Monday than commit now.
+            </div>
+          </div>
+          <div class="adv__f">
+            <div class="adv__acts">
+              <button class="btn btn--go" onclick="say('Draft roster updated and held for confirmation on Monday morning.')">Draft the change</button>
+              <button class="btn btn--ghost" onclick="say('Reminder set for Monday 08:00 with a fresher forecast.')">Remind me Monday</button>
+            </div>
+            <div class="disp"><span>Was this useful?</span>
+              <button class="btn btn--sm" onclick="disp(this,'Accepted')">Yes</button>
+              <button class="btn btn--sm btn--ghost" onclick="disp(this,'Dismissed')">No</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="adv">
+          <div class="adv__t">Check the Glasshouse 2 irrigation line on bench 3</div>
+          <div class="adv__meta">
+            <span class="att__tag tag--p2" style="margin:0">Welfare · Plants</span>
+            <span class="conf">Confidence: moderate</span>
+            <span class="worth">41 Nepenthes specimens affected</span>
+          </div>
+          <div class="adv__d">Moisture on bench 3 is falling faster than the other benches under identical humidity and daylight, which points to a delivery fault rather than a climate problem. The horticulturist reached the same conclusion independently this morning.</div>
+          <div class="why">
+            <button class="why__btn" onclick="why(this)">Why is this being suggested?</button>
+            <div class="why__body">
+              <b>What this is based on</b>
+              <ul>
+                <li>Moisture readings from 12 sensors across four benches over 7 days</li>
+                <li>Humidity and daylight identical across benches, which isolates the variable</li>
+                <li>Horticulturist note this morning corroborates</li>
+              </ul>
+              <b style="display:block;margin-top:8px">Worth knowing</b> The human spotted this first. The system’s job here was to confirm it with data and say which bench and how fast.
+            </div>
+          </div>
+          <div class="adv__f">
+            <div class="adv__acts"><button class="btn btn--go" onclick="say('Maintenance ticket raised for Glasshouse 2, bench 3.')">Raise a ticket</button></div>
+            <div class="disp"><span>Was this useful?</span>
+              <button class="btn btn--sm" onclick="disp(this,'Accepted')">Yes</button>
+              <button class="btn btn--sm btn--ghost" onclick="disp(this,'Dismissed')">No</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:var(--md2);background:var(--forest-050);border-color:var(--forest-100)">
+          <div class="card__t">Every yes or no here trains the system</div>
+          <div class="card__s" style="line-height:1.8;margin-top:3px">These are not feedback buttons — they are how the system learns. Each answer is written to the Ground Truth Ledger and used to score whether these suggestions still deserve your attention. Any recommendation whose accuracy falls below threshold is withdrawn automatically rather than left to erode trust.</div>
+        </div>
+      </section>
+
+      <!-- ============ MONEY BY ZONE ============ -->
+      <section class="screen" id="s-pl">
+        <div class="kpis">
+          <div class="kpi kpi--money"><div class="kpi__l">Revenue today</div><div class="kpi__v">$73,980</div><div class="kpi__d up">▲ 11.4% vs last Wednesday</div></div>
+          <div class="kpi kpi--money"><div class="kpi__l">Kept after costs</div><div class="kpi__v">$26,560</div><div class="kpi__d up">▲ 9.1% vs last Wednesday</div></div>
+          <div class="kpi"><div class="kpi__l">Share from admission</div><div class="kpi__v">68%</div><div class="kpi__d down">▼ we want this nearer 55%</div><div class="kpi__n">A lower share means more earned inside the gate</div></div>
+          <div class="kpi kpi--money"><div class="kpi__l">Spent per visitor inside</div><div class="kpi__v">$8.45</div><div class="kpi__d up">▲ $0.60 since the carts moved</div></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec__h"><div><div class="ey">Where the money is made</div><div class="sec__t">What each part of the estate earns, today</div>
+            <div class="sec__s">Revenue by location, less the staff, feed, energy and maintenance cost allocated to it. No model involved — this is measurement, not prediction.</div></div></div>
+          <table>
+            <thead><tr><th>Zone</th><th class="num">Visitors</th><th class="num">Revenue</th><th class="num">Costs</th><th class="num">Kept</th><th class="num">Per visitor</th></tr></thead>
+            <tbody>
+              <tr><td><b>Piranha Hall</b></td><td class="num">1,240</td><td class="num">$13,500</td><td class="num">$4,900</td><td class="num"><b style="color:var(--moss-500)">$8,600</b></td><td class="num">$6.94</td></tr>
+              <tr><td><b>Adventure Park</b></td><td class="num">1,760</td><td class="num">$26,900</td><td class="num">$18,600</td><td class="num"><b style="color:var(--moss-500)">$8,300</b></td><td class="num">$4.72</td></tr>
+              <tr><td><b>Carnivorous Glasshouse</b></td><td class="num">860</td><td class="num">$7,960</td><td class="num">$2,100</td><td class="num"><b style="color:var(--moss-500)">$5,860</b></td><td class="num">$6.81</td></tr>
+              <tr><td><b>Venom House</b></td><td class="num">670</td><td class="num">$6,420</td><td class="num">$4,300</td><td class="num"><b style="color:var(--moss-500)">$2,120</b></td><td class="num">$3.16</td></tr>
+              <tr><td><b>Main Aquarium</b></td><td class="num">950</td><td class="num">$9,100</td><td class="num">$11,900</td><td class="num"><b style="color:var(--rust-500)">−$2,800</b></td><td class="num">−$2.95</td></tr>
+              <tr><td><b>West Lawn &amp; grounds</b></td><td class="num">510</td><td class="num">$1,680</td><td class="num">$1,640</td><td class="num"><b style="color:var(--ink-400)">$40</b></td><td class="num">$0.08</td></tr>
+            </tbody>
+          </table>
+          <div class="note">The Main Aquarium loses money today, almost entirely on life-support energy. That may still be worth it as an anchor attraction — but it should be a choice, not a discovery. This table is what turns “we have no real idea where to invest” into an answerable question.</div>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="card__t">Spend per visitor, trailing 12 weeks</div>
+            <div class="card__s">The fastest profit lever available — and it needs no additional visitors</div>
+            <div id="c-rpv"></div>
+          </div>
+          <div class="card">
+            <div class="card__t">Where the opportunity sits</div>
+            <div class="card__s">Time spent in a zone against how far it is to somewhere to spend</div>
+            <table style="margin-top:var(--sm2)">
+              <thead><tr><th>Zone</th><th class="num">Time spent</th><th class="num">Walk to spend</th><th class="num">Spend/head</th></tr></thead>
+              <tbody>
+                <tr><td><b>Piranha Hall</b></td><td class="num">31 min</td><td class="num" style="color:var(--rust-500)">7 min</td><td class="num">$2.10</td></tr>
+                <tr><td><b>Glasshouse</b></td><td class="num">27 min</td><td class="num" style="color:var(--rust-500)">6 min</td><td class="num">$1.80</td></tr>
+                <tr><td><b>Gilded Orbit</b></td><td class="num">21 min</td><td class="num" style="color:var(--moss-500)">1 min</td><td class="num">$6.40</td></tr>
+                <tr><td><b>Orangery</b></td><td class="num">13 min</td><td class="num" style="color:var(--moss-500)">0 min</td><td class="num">$9.20</td></tr>
+              </tbody>
+            </table>
+            <div class="note">Spend per head tracks how close the nearest till is, not how interested people are. The two zones that hold attention longest are the two furthest from anywhere to spend.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SYSTEM HEALTH ============ -->
+      <section class="screen" id="s-health">
+        <div class="kpis">
+          <div class="kpi"><div class="kpi__l">Sensors reporting</div><div class="kpi__v">268 <small>of 274</small></div><div class="kpi__d down">6 silent — crew dispatched</div></div>
+          <div class="kpi"><div class="kpi__l">Edge nodes</div><div class="kpi__v">7 <small>of 7</small></div><div class="kpi__d up">All able to run without the cloud</div></div>
+          <div class="kpi"><div class="kpi__l">Longest data backlog</div><div class="kpi__v">14<small> min</small></div><div class="kpi__d flat">Node 6 · catching up normally</div></div>
+          <div class="kpi kpi--money"><div class="kpi__l">AI running cost today</div><div class="kpi__v">$18.40</div><div class="kpi__d up">78% under the daily cap</div></div>
+        </div>
+
+        <div class="card" style="margin-bottom:var(--sm2)">
+          <div class="card__t">Silent sensors — treated as faults, never as calm</div>
+          <div class="card__s">A sensor that stops reporting raises an alarm. Silence is never read as “nothing to report”.</div>
+          <table style="margin-top:var(--md)">
+            <thead><tr><th>Device</th><th>Location</th><th>Silent since</th><th>What it costs us</th><th class="num">Action</th></tr></thead>
+            <tbody>
+              <tr><td><b>CAM-31-B</b></td><td>Enclosure 31 · Hesper</td><td>06:20</td><td style="color:var(--ochre-600)">Activity readings down to a single camera</td><td class="num"><button class="btn btn--sm btn--go" onclick="say('Crew assigned to CAM-31-B.')">Dispatch</button></td></tr>
+              <tr><td><b>OCC-07-04</b></td><td>Gnome Grotto</td><td>11:05</td><td style="color:var(--ochre-600)">Zone count estimated from neighbours</td><td class="num"><button class="btn btn--sm btn--go" onclick="say('Crew assigned to OCC-07-04.')">Dispatch</button></td></tr>
+              <tr><td><b>SOIL-G2-03</b></td><td>Glasshouse 2 · bench 3</td><td>Yesterday 18:40</td><td style="color:var(--rust-500)">No moisture readings on the affected bench</td><td class="num"><button class="btn btn--sm btn--urgent" onclick="say('Priority ticket raised \u2014 this sensor covers an open recommendation.')">Priority</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="card__t">Are the models still right?</div>
+            <div class="card__s">Live scoring from the Ground Truth Ledger</div>
+            <table style="margin-top:var(--sm2)">
+              <thead><tr><th>What it does</th><th>Tier</th><th class="num">How it is doing</th><th>State</th></tr></thead>
+              <tbody>
+                <tr><td><b>Predicting queue waits</b></td><td>A few min</td><td class="num">3.4 min off</td><td style="color:var(--moss-500)">Within threshold</td></tr>
+                <tr><td><b>Forecasting attendance</b></td><td>Day ahead</td><td class="num">4.6% off</td><td style="color:var(--moss-500)">Within threshold</td></tr>
+                <tr><td><b>Spotting welfare change</b></td><td>Safety-critical</td><td class="num">71% correct</td><td style="color:var(--moss-500)">Within threshold</td></tr>
+                <tr><td><b>Counting the piranhas</b></td><td>Safety-critical</td><td class="num">±3 at 90%</td><td style="color:var(--ochre-600)">Getting less certain</td></tr>
+                <tr><td><b>Detecting a breach</b></td><td>Safety-critical</td><td class="num">94% on drills</td><td style="color:var(--moss-500)">Within threshold</td></tr>
+              </tbody>
+            </table>
+            <div class="note">The piranha count has become less certain since the oxygen incident began, because the water is cloudier. A manual count is scheduled this afternoon to recalibrate.</div>
+          </div>
+          <div class="card">
+            <div class="card__t">What if an AI supplier disappeared tonight?</div>
+            <div class="card__s">Our exposure, by how critical the job is</div>
+            <div style="margin-top:var(--md)">
+              <div class="dw"><div class="dw__n" style="width:160px">Safety &amp; welfare</div><div class="dw__t"><div class="dw__f" style="width:100%;background:var(--moss-500)"></div></div><div class="dw__v" style="width:98px">No exposure</div></div>
+              <div class="dw"><div class="dw__n" style="width:160px">Day-to-day operations</div><div class="dw__t"><div class="dw__f" style="width:100%;background:var(--forest-500)"></div></div><div class="dw__v" style="width:98px">Falls back</div></div>
+              <div class="dw"><div class="dw__n" style="width:160px">Visitor experience</div><div class="dw__t"><div class="dw__f" style="width:100%;background:var(--forest-300)"></div></div><div class="dw__v" style="width:98px">Degrades</div></div>
+            </div>
+            <div class="note">Everything safety-critical runs on our own hardware with a pinned version. Nothing that keeps a person or an animal safe depends on an outside supplier. Second-supplier tests last passed on 11 September.</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= DETAIL SHEETS ================= -->
+<div class="scrim" id="scrim" onclick="if(event.target===this)close_()">
+
+  <div class="sheet" id="sheet-hesper" style="display:none">
+    <div class="sheet__h">
+      <div><div class="sheet__t">Hesper</div>
+        <div class="sheet__s">Varanus komodoensis · female · Enclosure 31 · Tier 1 · in the collection since 2019</div></div>
+      <button class="sheet__x" onclick="close_()">Close</button>
+    </div>
+    <div class="sheet__b">
+      <div class="banner on" style="margin-bottom:var(--md2)">
+        <div><b>Welfare alert — eating 42% below her own normal for a third consecutive feed</b>
+          <p>Flagged by the welfare model at 07:40 and corroborated by this morning’s keeper note. The system has flagged it; the keeper and the vet decide what happens next.</p></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><div class="kpi__l">Eating vs her normal</div><div class="kpi__v" style="color:var(--rust-500)">−42%</div><div class="kpi__d down">3 feeds running</div></div>
+        <div class="kpi"><div class="kpi__l">Activity</div><div class="kpi__v" style="color:var(--rust-500)">−31%</div><div class="kpi__d down">Resting up 58%</div></div>
+        <div class="kpi"><div class="kpi__l">Weight</div><div class="kpi__v">78.4<small> kg</small></div><div class="kpi__d flat">▼ 0.9 kg in 14 days</div></div>
+        <div class="kpi"><div class="kpi__l">Enclosure warmth</div><div class="kpi__v" style="color:var(--moss-500)">26–38°C</div><div class="kpi__d up">In range — not the cause</div></div>
+      </div>
+      <div class="grid2" style="margin:var(--sm2) 0">
+        <div class="card"><div class="card__t">How much she has eaten</div>
+          <div class="card__s">Grams per feed over 14 days · the drop begins at feed 12</div><div id="c-intake"></div></div>
+        <div class="card"><div class="card__t">How she spends her time</div>
+          <div class="card__s">Share of observed time over the last 14 days</div><div id="c-budget"></div></div>
+      </div>
+      <div class="g-2-1">
+        <div class="card">
+          <div class="card__t">Her history</div>
+          <div class="card__s">Every alert, intervention and outcome for this animal</div>
+          <div class="tl" style="margin-top:var(--md)">
+            <div class="tl__i tl__i--alert"><div class="tl__d">Today · 07:40</div>
+              <div class="tl__t">Welfare alert raised — eating and activity both down</div>
+              <div class="tl__x">Third low feed in a row. Awaiting veterinary assessment. Keeper note: reluctant to leave the shelter, no visible injury.</div></div>
+            <div class="tl__i"><div class="tl__d">11 Sept</div>
+              <div class="tl__t">Keeper observation logged</div>
+              <div class="tl__x">Ayush: “Took food but slowly, less interested than usual.” Logged as a watch item; no alert raised at the time.</div></div>
+            <div class="tl__i tl__i--ok"><div class="tl__d">14 Aug</div>
+              <div class="tl__t">Routine veterinary check — no concerns</div>
+              <div class="tl__x">Dr. Reddy. Weight 79.3 kg, good condition, dentition normal. Bloods within reference range.</div></div>
+            <div class="tl__i tl__i--ok"><div class="tl__d">2 Jun</div>
+              <div class="tl__t">Welfare alert — resolved, no illness</div>
+              <div class="tl__x">Eating dipped 18% over two feeds. The vet found nothing wrong; it coincided with a shed cycle. Her baseline was adjusted afterwards so shedding is not read as illness again.</div></div>
+            <div class="tl__i"><div class="tl__d">18 Mar</div>
+              <div class="tl__t">Enclosure enrichment changed</div>
+              <div class="tl__x">New basking platform installed. The keeper flagged the change so her baseline was reset rather than the new behaviour being read as an anomaly.</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:var(--sm2)">
+            <div class="card__t">What you can do</div>
+            <div style="display:flex;flex-direction:column;gap:var(--sm);margin-top:var(--sm2)">
+              <button class="btn btn--urgent" onclick="say('Dr. Reddy paged. Hesper added to this morning\u2019s round.')">Escalate to the vet</button>
+              <button class="btn btn--go" onclick="say('Keeper Ayush asked to do a close visual check within the hour.')">Ask the keeper to check</button>
+              <button class="btn" onclick="say('Observation logged against Hesper\u2019s record.')">Log an observation</button>
+              <button class="btn" onclick="say('Feed plan flagged for review with the vet.')">Review her feed plan</button>
+            </div>
+            <div class="gate">
+              <div><div class="gate__t">Paid encounters suspended</div>
+                <div class="gate__s">4 bookings held and refunded automatically while Hesper is outside her normal. Revenue never overrides welfare.</div></div>
+              <button class="btn btn--sm" onclick="say('Overriding a welfare gate needs the head keeper\u2019s sign-off.')">Override</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card__t">What the system looked at</div>
+            <div class="card__s" style="line-height:1.8;margin-top:var(--sm)">
+              Feeding-station weights, camera activity across two cameras — one is currently offline, so this alert is less certain than usual — enclosure warmth, and 14 days of her own normal behaviour.<br/><br/>
+              <b style="color:var(--forest-800)">Welfare baseline deviation v6.1</b> · runs on our own hardware, version-pinned · correct 71% of the time over the last 30 days.
+            </div>
+            <div class="disp" style="margin-top:var(--md);padding-top:var(--sm2);border-top:1px solid var(--rule-soft)">
+              <span>Was this alert right?</span>
+              <button class="btn btn--sm" onclick="disp(this,'Confirmed')">Yes</button>
+              <button class="btn btn--sm btn--ghost" onclick="disp(this,'False alert')">No</button>
+              <button class="btn btn--sm btn--ghost" onclick="disp(this,'Unsure')">Unsure</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet-piranha" style="display:none">
+    <div class="sheet__h">
+      <div><div class="sheet__t">Jumping piranha colony</div>
+        <div class="sheet__s">Serrasalmus sp. · Tank 12 · Tier 1 · tracked as a colony, not as individuals</div></div>
+      <button class="sheet__x" onclick="close_()">Close</button>
+    </div>
+    <div class="sheet__b">
+      <div class="banner on" style="margin-bottom:var(--md2)">
+        <div><b>Life-support alert — oxygen falling, maintenance not yet dispatched</b>
+          <p>Detected at 09:12 by the float switch and threshold alarm on edge node 4. This alarm is deterministic: it did not depend on the network, the cloud, or a model. Backup aeration is available and has not yet been engaged.</p></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><div class="kpi__l">Dissolved oxygen</div><div class="kpi__v" style="color:var(--rust-500)">5.1<small> mg/L</small></div><div class="kpi__d down">▼ from a 7.4 baseline</div></div>
+        <div class="kpi"><div class="kpi__l">How many fish</div><div class="kpi__v">38–44</div><div class="kpi__d flat">A range, not a guess at one number</div></div>
+        <div class="kpi"><div class="kpi__l">Water temperature</div><div class="kpi__v">26.8<small> °C</small></div><div class="kpi__d up">In range</div></div>
+        <div class="kpi"><div class="kpi__l">Feeding response</div><div class="kpi__v" style="color:var(--ochre-600)">Sluggish</div><div class="kpi__d down">40% slower to the feed</div></div>
+      </div>
+      <div class="grid2" style="margin:var(--sm2) 0">
+        <div class="card"><div class="card__t">Oxygen over the last six hours</div>
+          <div class="card__s">The fall begins at 08:00, shortly after the sluggish feed</div><div id="c-do"></div></div>
+        <div class="card"><div class="card__t">Colony size over 12 weeks</div>
+          <div class="card__s">The band is our uncertainty · the line is the best estimate</div><div id="c-pop"></div>
+          <div class="note">We never report a single number. The range is the honest answer, and when it widens too far we ask a keeper to count rather than guessing more confidently.</div></div>
+      </div>
+      <div class="g-2-1">
+        <div class="card">
+          <div class="card__t">Tank history</div>
+          <div class="tl" style="margin-top:var(--md)">
+            <div class="tl__i tl__i--alert"><div class="tl__d">Today · 09:12</div>
+              <div class="tl__t">Life-support alarm — oxygen falling, pump B irregular</div>
+              <div class="tl__x">Local alarm tripped at the edge node. Keeper Ayush notified automatically. Awaiting maintenance dispatch.</div></div>
+            <div class="tl__i"><div class="tl__d">Today · 08:30</div>
+              <div class="tl__t">Feeding response logged as sluggish</div>
+              <div class="tl__x">40% slower to the morning feed. In hindsight this was the first sign of the oxygen problem.</div></div>
+            <div class="tl__i tl__i--ok"><div class="tl__d">6 Sept</div>
+              <div class="tl__t">Manual count — 41 fish</div>
+              <div class="tl__x">Counted by the keeper during the feeding aggregation. The system estimated 39–43 at the time, so the calibration held.</div></div>
+            <div class="tl__i"><div class="tl__d">22 Aug</div>
+              <div class="tl__t">Sudden drop investigated</div>
+              <div class="tl__x">The estimate fell by three over a week. A keeper audit confirmed two losses to aggression between fish, which is normal for the species. No action needed.</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:var(--sm2)">
+            <div class="card__t">What you can do</div>
+            <div style="display:flex;flex-direction:column;gap:var(--sm);margin-top:var(--sm2)">
+              <button class="btn btn--urgent" onclick="say('Maintenance crew dispatched to Tank 12. ETA 6 minutes.')">Dispatch maintenance</button>
+              <button class="btn btn--go" onclick="say('Backup aeration engaged. Oxygen will be re-checked in 10 minutes.')">Engage backup aeration</button>
+              <button class="btn" onclick="say('Keeper Ayush asked to attend Tank 12 immediately.')">Call the keeper to the tank</button>
+              <button class="btn" onclick="say('Manual count scheduled for this afternoon\u2019s feed.')">Schedule a manual count</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card__t">Why the count got less certain</div>
+            <div class="card__s" style="line-height:1.8;margin-top:var(--sm)">
+              The water has become cloudier as the oxygen fell, which makes the fish harder to see and widens our estimate. The system has correctly become less confident rather than staying confidently wrong.<br/><br/>
+              <b style="color:var(--forest-800)">Piranha density estimator v3.4</b> · runs on our own hardware · checked weekly against a manual count.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var TITLES={
+  today:['Today at the Estate','Wednesday, 16 September 2026 · Open 09:00–18:00 · Light cloud, 19°C'],
+  visitors:['Visitors & Footfall','How many came, when they came, and where they spent their time'],
+  collections:['Animals & Aquatics','55 enclosures · sensor readings and keeper observations side by side'],
+  gardens:['Gardens','Carnivorous collections, glasshouse conditions and propagation stock'],
+  park:['Adventure Park','40 historic rides · predicted waits and asset condition'],
+  advisories:['Recommendations','What the system suggests, why it suggests it, and what it needs you to decide'],
+  pl:['Money by Zone','What each part of the estate earns after its costs'],
+  health:['System Health','Sensors, edge nodes, model accuracy and supplier exposure']
+};
+function go(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on')});
+  var el=document.getElementById('s-'+id); if(el) el.classList.add('on');
+  document.querySelectorAll('.nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-go')===id)});
+  if(TITLES[id]){document.getElementById('ttl').textContent=TITLES[id][0];
+    document.getElementById('sub').textContent=TITLES[id][1];}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.nav a').forEach(function(a){
+  a.addEventListener('click',function(){go(a.getAttribute('data-go'))});});
+
+var tmr;
+function say(msg){var t=document.getElementById('toast');t.innerHTML='<b>Done.</b> '+msg;
+  t.classList.add('on');clearTimeout(tmr);tmr=setTimeout(function(){t.classList.remove('on')},3600);}
+function disp(btn,verdict){var row=btn.closest('.disp');
+  row.innerHTML='<span style="color:var(--moss-500)">'+verdict+' · written to the Ground Truth Ledger</span>';
+  say('Recorded as <b>'+verdict.toLowerCase()+'</b>. This becomes a label used to score the model.');}
+function why(b){var body=b.nextElementSibling;body.classList.toggle('on');
+  b.textContent=body.classList.contains('on')?'Hide the reasoning':'Why is this being suggested?';}
+function chip(b){b.parentElement.querySelectorAll('.chip').forEach(function(c){c.classList.remove('on')});b.classList.add('on');}
+function tab(b,which){b.parentElement.querySelectorAll('button').forEach(function(c){c.classList.remove('on')});
+  b.classList.add('on');['land','aqua','plants'].forEach(function(k){
+    document.getElementById('enc-'+k).style.display=(k===which)?'grid':'none';});}
+var ROLE='c';
+var ROLE_COPY={
+  c:['Money made today','the Countess — what the estate earned, and what needs her decision'],
+  o:['The estate right now','Operations — crowds, staffing and assets'],
+  k:['The collections today','Keepers — welfare, feeding and what needs checking']
+};
+function applyRole(r){
+  ROLE=r;
+  document.getElementById('kpi-c').style.display = r==='c'?'grid':'none';
+  document.getElementById('kpi-o').style.display = r==='o'?'grid':'none';
+  document.getElementById('kpi-k').style.display = r==='k'?'grid':'none';
+  document.getElementById('kpi-ey').textContent = ROLE_COPY[r][0];
+  document.querySelectorAll('.nav a').forEach(function(a){
+    var sc=a.getAttribute('data-roles')||'cok';
+    a.style.display = sc.indexOf(r)>-1 ? 'flex' : 'none';
+  });
+  document.querySelectorAll('.att__row').forEach(function(row){
+    var sc=row.getAttribute('data-roles')||'cok';
+    row.style.display = sc.indexOf(r)>-1 ? 'flex' : 'none';
+  });
+  document.querySelectorAll('.strip__i').forEach(function(it){
+    var sc=it.getAttribute('data-roles')||'cok';
+    it.style.display = sc.indexOf(r)>-1 ? 'block' : 'none';
+  });
+  // if the open screen is not available to this role, fall back to Today
+  var cur=document.querySelector('.screen.on');
+  if(cur){
+    var id=cur.id.replace('s-','');
+    var link=document.querySelector('.nav a[data-go="'+id+'"]');
+    if(link && link.style.display==='none') go('today');
+  }
+}
+function setRole(b,name){
+  b.parentElement.querySelectorAll('button').forEach(function(c){c.classList.remove('on')});
+  b.classList.add('on');
+  var r = name==='Countess'?'c':(name==='Operations'?'o':'k');
+  applyRole(r);
+  say('Now showing the <b>'+ROLE_COPY[r][1]+'</b> view. Same data underneath — each role sees only the decisions it owns.');
+}
+var degraded=false;
+function degrade(){degraded=!degraded;
+  document.getElementById('banner').classList.toggle('on',degraded);
+  document.getElementById('aidot').className='dot '+(degraded?'dot--bad':'dot--ok');
+  document.getElementById('aitxt').textContent=degraded?'AI layer degraded':'AI layer nominal';
+  say(degraded?'AI layer marked <b>degraded</b>. Deterministic sensing continues unaffected — and the dashboard says so rather than going quiet.'
+    :'AI layer restored. Recommendations resume.');}
+function open_(which){
+  document.getElementById('sheet-hesper').style.display=which==='hesper'?'block':'none';
+  document.getElementById('sheet-piranha').style.display=which==='piranha'?'block':'none';
+  document.getElementById('scrim').classList.add('on');document.body.style.overflow='hidden';}
+function close_(){document.getElementById('scrim').classList.remove('on');document.body.style.overflow='';}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')close_()});
+
+/* ---------- charts ---------- */
+var F700='#2E5240',F600='#3C6B50',F500='#4A7C59',F300='#9BBAA4',F200='#C6D9CB',
+    RUST='#B5533C',BARK='#8B6F4E',INK4='#8A7F76',RULE='#F0E9DC';
+function svgWrap(w,h,inner){return '<svg viewBox="0 0 '+w+' '+h+'" style="width:100%;height:auto;display:block;margin-top:14px" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">'+inner+'</svg>';}
+function yGrid(x0,x1,y0,y1,max,steps,fmt){var s='';
+  for(var i=0;i<=steps;i++){var y=y1-(y1-y0)*i/steps,v=Math.round(max*i/steps);
+    s+='<line x1="'+x0+'" y1="'+y+'" x2="'+x1+'" y2="'+y+'" stroke="'+RULE+'" stroke-width="1"/>';
+    s+='<text x="'+(x0-8)+'" y="'+(y+4)+'" font-size="10" fill="'+INK4+'" text-anchor="end">'+(fmt?fmt(v):v)+'</text>';}
+  return s;}
+function lineChart(el,labels,series,max,opts){opts=opts||{};
+  var w=760,h=opts.h||230,x0=48,x1=w-14,y0=16,y1=h-28;
+  var s=yGrid(x0,x1,y0,y1,max,4,opts.fmt),step=(x1-x0)/(labels.length-1);
+  labels.forEach(function(l,i){s+='<text x="'+(x0+step*i)+'" y="'+(h-9)+'" font-size="10" fill="'+INK4+'" text-anchor="middle">'+l+'</text>';});
+  series.forEach(function(sr){
+    var pts=sr.v.map(function(v,i){return [x0+step*i,y1-(y1-y0)*(v/max)]});
+    var d=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)}).join(' ');
+    if(sr.fill) s+='<path d="'+d+' L'+pts[pts.length-1][0].toFixed(1)+','+y1+' L'+pts[0][0].toFixed(1)+','+y1+' Z" fill="'+sr.fill+'" opacity="'+(sr.op||.15)+'"/>';
+    s+='<path d="'+d+'" fill="none" stroke="'+sr.c+'" stroke-width="'+(sr.w||2)+'" '+(sr.dash?'stroke-dasharray="5,4"':'')+' stroke-linejoin="round"/>';
+    if(sr.dots) pts.forEach(function(p){s+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.6" fill="'+sr.c+'"/>';});
+    if(sr.peak!=null){var p=pts[sr.peak];
+      s+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="4.5" fill="'+RUST+'"/>';
+      s+='<text x="'+p[0].toFixed(1)+'" y="'+(p[1]-11).toFixed(1)+'" font-size="10.5" font-weight="600" fill="'+RUST+'" text-anchor="middle">busiest</text>';}});
+  document.getElementById(el).innerHTML=svgWrap(w,h,s);}
+function barChart(el,labels,vals,max,color,opts){opts=opts||{};
+  var w=760,h=opts.h||210,x0=48,x1=w-14,y0=16,y1=h-28;
+  var s=yGrid(x0,x1,y0,y1,max,4,opts.fmt),bw=(x1-x0)/labels.length,pad=bw*0.3;
+  labels.forEach(function(l,i){var bh=(y1-y0)*(vals[i]/max),x=x0+bw*i+pad/2;
+    var c=(opts.hi!=null&&i===opts.hi)?RUST:color;
+    s+='<rect x="'+x.toFixed(1)+'" y="'+(y1-bh).toFixed(1)+'" width="'+(bw-pad).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="'+c+'" rx="2"/>';
+    s+='<text x="'+(x+(bw-pad)/2).toFixed(1)+'" y="'+(h-9)+'" font-size="10" fill="'+INK4+'" text-anchor="middle">'+l+'</text>';
+    if(opts.showVal) s+='<text x="'+(x+(bw-pad)/2).toFixed(1)+'" y="'+(y1-bh-6).toFixed(1)+'" font-size="10.5" font-weight="600" fill="'+F700+'" text-anchor="middle">'+(opts.fmt?opts.fmt(vals[i]):vals[i])+'</text>';});
+  document.getElementById(el).innerHTML=svgWrap(w,h,s);}
+
+var HRS=['8am','9','10','11','12','1pm','2','3','4','5','6pm'];
+var FC=[108,270,440,428,392,350,315,275,234,162,81];
+lineChart('c-today',HRS,[{v:FC,c:F200,dash:true,w:1.8},
+  {v:[95,290,470,415,375,340,310],c:F600,fill:F600,peak:2}],600,{h:212});
+lineChart('c-hourly',HRS,[{v:FC,c:F200,dash:true,w:1.8},
+  {v:[95,290,470,415,375,340,310,270,243,167,86],c:F600,fill:F600,peak:2}],600,{h:240});
+barChart('c-wkend',['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+  [2100,1950,2240,2380,3100,6180,5640],7000,F500,{h:210,showVal:true,hi:5,
+  fmt:function(v){return v>=1000?(v/1000).toFixed(1)+'k':v}});
+barChart('c-wait',['R07','R15','R22','R03','R11','R28','R34','R19'],
+  [18,4,0,9,12,6,5,14],24,F500,{h:200,showVal:true,hi:0});
+lineChart('c-rpv',['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12'],
+  [{v:[6.1,6.3,6.5,6.4,6.9,7.1,7.3,7.2,7.7,8.0,8.2,8.45],c:F600,fill:F600,dots:true}],
+  10,{h:210,fmt:function(v){return '$'+v}});
+lineChart('c-intake',['1','2','3','4','5','6','7','8','9','10','11','12','13','14'],
+  [{v:[1180,1210,1150,1240,1190,1220,1160,1200,1230,1170,1190,720,680,690],c:RUST,fill:RUST,dots:true}],
+  1500,{h:200,fmt:function(v){return v+'g'}});
+barChart('c-budget',['Moving','Resting','Feeding','Basking','Hidden'],[12,58,3,9,18],60,F500,
+  {h:200,showVal:true,fmt:function(v){return v+'%'}});
+lineChart('c-do',['3am','4','5','6','7','8','9am'],
+  [{v:[7.4,7.4,7.3,7.4,7.2,6.6,5.1],c:RUST,fill:RUST,dots:true}],9,{h:200});
+applyRole('c');
+lineChart('c-pop',['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12'],
+  [{v:[46,46,45,45,44,44,43,41,41,41,41,44],c:F200,w:1.5},
+   {v:[42,42,41,41,40,40,39,38,38,38,38,38],c:F200,w:1.5},
+   {v:[44,44,43,43,42,42,41,39.5,39.5,39.5,39.5,41],c:F600,dots:true,w:2}],50,{h:200});
+</script>
+</body>
+</html>
