@@ -3,7 +3,7 @@
 Date: 2026-09-15
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 The Popularity & Trend Scoring Service includes a forecasting model and an
