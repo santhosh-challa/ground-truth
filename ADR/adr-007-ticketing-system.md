@@ -1,6 +1,6 @@
-# **ADR-006: Ticketing, Pass & Entry  Architecture**
+# **ADR-007: Ticketing, Pass & Entry  Architecture**
 
-**Date:** 2026-09-14  
+**Date:** 2026-09-15  
  **Status:** Accepted
 
 ## **Context**
