@@ -177,7 +177,6 @@ Prioritized:
 
 Cross-cutting:
 
-5.  Growth and retention
 6.  Ingestion, turning existing paper records into structured data
 7.  Alert notifications and the notification service
 8.  Admin dashboard
