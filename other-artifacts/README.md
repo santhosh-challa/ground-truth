@@ -1,0 +1,1 @@
+These artifacts are related to actor action approach, quanta identification and overall system style.

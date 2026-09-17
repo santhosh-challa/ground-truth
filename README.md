@@ -177,6 +177,7 @@ Prioritized:
 
 Cross-cutting:
 
+5.  Growth and retention
 6.  Ingestion, turning existing paper records into structured data
 7.  Alert notifications and the notification service
 8.  Admin dashboard
@@ -292,9 +293,9 @@ The **Estate quantum** is deliberately the largest. Plants, rides, staffing and 
 
 The **AI Gateway is its own quantum**. Its characteristics are completely different from everything around it, accuracy and explainability and observability rather than availability and recoverability, and it changes on a completely different cadence because the model landscape moves faster than the estate does. Isolating it is what makes the provider-swap story in section 11 credible rather than aspirational.
 
-## 6. Architecture characteristics and fitness functions
+## 6. Fitness functions
 
-The brief asks whether the architectural characteristics of AI additions match the existing architecture. We answered that by naming the characteristics first and making each one automatically testable, so an AI feature fails a build exactly as a functional regression would.
+These are some of proposed fitness functions. The current CI harness does not yet demonstrate the stated operational guarantees
 
 | Characteristic   | Target                                                                                    | Fitness function                                                                                                                         |
 |----------------------|-----------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
@@ -304,29 +305,29 @@ The brief asks whether the architectural characteristics of AI additions match t
 | Provider portability | Swap any Tier B or C provider within one working day, configuration only                      | Contract tests run every capability against a second provider weekly                                                                         |
 | Verifiability        | Every AI decision traceable to inputs, model version and prompt version                       | Audit sampler reconstructs lineage for random production decisions                                                                           |
 | Cost predictability  | Inference spend bounded, alerting before overrun                                              | Gateway budget caps enforced at runtime, nightly variance report                                                                             |
-| Privacy              | No biometric identification anywhere; imagery does not leave the edge except on incident      | Static scan for face-recognition APIs; egress test asserts no frame payloads on P1 or P2 lanes                                               |
+| Privacy              | No biometric identification anywhere; Say routine camera video stays local; authorized keeper attachments may upload                                               |
 
 [github workflows](.github/workflows/fitness-functions.yml)
 
-[Fitness test cost-predictability](fitness-tests/cost-predictability.sh)
+[Fitness test cost-predictability](engineering-practices/fitness-tests/cost-predictability.sh)
 
-[Fitness test elasticity](fitness-tests/elasticity.sh)
+[Fitness test elasticity](engineering-practices/fitness-tests/elasticity.sh)
 
-[Fitness test: offline tolerance](fitness-tests/offline-tolerance.sh)
+[Fitness test: offline tolerance](engineering-practices/fitness-tests/offline-tolerance.sh)
 
-[Fitness test: privacy](fitness-tests/privacy.sh)
+[Fitness test: privacy](engineering-practices/fitness-tests/privacy.sh)
 
-[Fitness test: provider portability](fitness-tests/provider-portability.sh)
+[Fitness test: provider portability](engineering-practices/fitness-tests/provider-portability.sh)
 
-[Fitness test: safety latency](fitness-tests/safety-latency.sh)
+Fitness test: safety latency](engineering-practices/fitness-tests/safety-latency.sh)
 
-[Fitness test verifiability](fitness-tests/verifiability.sh)
+[Fitness test verifiability](engineering-practices/fitness-tests/verifiability.sh)
 
-[Fitness test architecture-fitness-functions](fitness-tests/architecture-fitness-functions.sh)
+[Fitness test architecture-fitness-functions](engineering-practices/fitness-tests/architecture-fitness-functions.sh)
 
 ## 7. Prioritized use cases
 
-Five prioritized use cases. Each has a C2 diagram, a data flow and its own ADRs.
+Five prioritized use cases. Four of them got C2 diagram, a data flow and its own ADRs.
 
 | # | Use case                                                                        | AI necessity                                  |
 |--------|-------------------------------------------------------------------------------------|---------------------------------------------------|
@@ -334,7 +335,6 @@ Five prioritized use cases. Each has a C2 diagram, a data flow and its own ADRs.
 | 2      | [Animals and plants sensor data](#72-animals-and-plants-sensor-data)         | Load-bearing                                      |
 | 3      | [Footfall analytics](#73-footfall-analytics)                                 | Load-bearing, classical ML rather than generative |
 | 4      | [Feedback collection and assessment](#74-feedback-collection-and-assessment) | Load-bearing                                      |
-| 5      | [Growth and retention](#75-growth-and-retention)                             | Enhancement                                       |
 
 ### 7.1 Ticket and booking system
 
@@ -404,7 +404,8 @@ Local visit/redemption information can subsequently be reconciled when connectiv
 
 #### C2 Diagram 
 
-[Ticket and booking C2](assets/Ticketing_C2.png)
+![Ticket and booking C2](assets/Ticketing_C2.png)
+[Open full-size diagram](assets/Ticketing_C2.png)
 
 #### Flow Diagram
 
@@ -416,7 +417,7 @@ Local visit/redemption information can subsequently be reconciled when connectiv
 
 ### 7.2 Animals and plants sensor data
 
-**AI necessity: load-bearing.** No deterministic rule can express "this animal is behaving abnormally" across 200 or more animals of many species. This is the clearest capability gap in the brief that only machine learning closes.
+**AI role:** Observation extraction, evidence summaries and a limited camera-counting pilot. Configured rules raise sensor concerns; staff review the evidence.
 
 **Business outcome.** Give keepers and vets a shared view of feeding, health observations and enclosure conditions, so they can review concerns with the supporting evidence. We aim to make recording and review easier; earlier detection and reduced care costs are outcomes to evaluate.
 
@@ -454,11 +455,12 @@ Connectivity and AI limits
 
 The Animal application and concern rules run in the cloud. Local observation capture, camera counting and buffering can continue while local connections, power and storage are available. Cloud rule evaluation, AI extraction and evidence summaries pause when their required connections are unavailable. Keeper rounds are a separate care procedure; they do not bound automated alert delay.
 
-AI assists with extraction, summaries and the camera-counting pilot. General behavioural monitoring, thermal/acoustic analysis and automated diagnosis are outside the selected design.
+AI assists with extraction, summaries and the camera-counting pilot. General behavioral monitoring, thermal/acoustic analysis and automated diagnosis are outside the selected design.
 
 #### C2 Diagram 
 
-[Animal Monitoring](https://github.com/santhosh-challa/ground-truth/blob/main/assets/Animal_Monitoring_C2.png)
+![Animal Monitoring C2](assets/Animal_Monitoring_C2.png)
+[Open full-size diagram](assets/Animal_Monitoring_C2.png)
 
 #### Flow Diagrams
 
@@ -502,7 +504,8 @@ Trend and anomaly forecasting, layered on top: once enough batch-window history 
 
 #### C2 Diagram 
 
-[Zone Popularity](assets/Zone_Popularity_C2.png)
+![Zone Popularity](assets/Zone_Popularity_C2.png)
+[Open full-size diagram](assets/Zone_Popularity_C2.png)
 
 #### **Flow Diagram**
 
@@ -538,7 +541,8 @@ Trend and anomaly forecasting, layered on top: once enough batch-window history 
 
 #### C2 Diagram 
 
-- [Feedback Evaluation Reporting.png](assets/Feedback_Evaluation_Reporting_C2.png)
+![Feedback Evaluation Reporting.png](assets/Feedback_Evaluation_Reporting_C2.png)
+[Open full-size diagram](assets/Feedback_Evaluation_Reporting_C2.png)
 
 #### Flow Diagram
 
@@ -548,7 +552,7 @@ Trend and anomaly forecasting, layered on top: once enough batch-window history 
 
 - [AI Feedback Evaluation And Reporting](ADR/adr-006-ai-feedback-evaluation-and-reporting.md)
 
-### 7.5 Growth and retention
+### 7.5 Growth and retention 
 
 **AI necessity: an enhancement, and we say so.** A popularity-ranked, wait-time-aware itinerary with no machine learning at all captures most of the value. AI improves it; the estate is not dependent on it. Being honest about this is more credible than overclaiming, and the non-AI fallback here is genuinely good rather than a token.
 

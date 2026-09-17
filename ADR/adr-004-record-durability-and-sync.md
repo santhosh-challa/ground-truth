@@ -10,7 +10,7 @@ Our selected use cases are animal health monitoring, footfall/popularity, and ti
 
 Records originate in many places: a keeper's tablet, an enclosure sensor, a people counter, a gate scanner, a staffed lane issuing a cash ticket. Each origin may lose its link to the next hop at any time, and the estate as a whole may lose its link to the cloud. These are two separate failures. A record must survive whichever one happens.
 
-Not every record has the same urgency. A feeding note can upload later. A footfall report can show delayed counts. A gate admission needs a local decision now. This ADR sets the rule every record follows regardless of where it is decided. Where processing runs is [ADR-002](002-adr-deployment-topology.md).
+Not every record has the same urgency. A feeding note can upload later. A footfall report can show delayed counts. A gate admission needs a local decision now. This ADR sets the rule every record follows regardless of where it is decided. Where processing runs is [ADR-005](adr-005-deployment-topology.md).
 
 ## Constraints from organizers
 
@@ -20,7 +20,7 @@ Not every record has the same urgency. A feeding note can upload later. A footfa
 
 ## Assumptions
 
-- At least one link exists from each origin to the cloud, possibly intermittent. Which links exist is a design choice recorded in ADR-002.
+- At least one link exists from each origin to the cloud, possibly intermittent. Which links exist is a design choice recorded in ADR-005.
 - Origin devices have enough local storage to hold an agreed disconnection window. Devices that do not are treated as lossy and documented as such.
 
 ## Decision

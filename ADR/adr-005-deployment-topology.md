@@ -7,7 +7,7 @@
 ## Context
 
 The selected use cases are animal health monitoring, footfall/popularity, and ticketing. Wi-Fi on the estate is patchy. The brief permits cloud services and provides a budget for MQTT-capable devices.
-[ADR-001](001-adr-record-durability-and-sync.md) decides that every record is saved at its origin and forwarded when connected. That preserves records but cannot act on them during an outage. This ADR decides which functions run in the cloud, which run on the estate, and which run on the device itself, and why.
+[ADR-004](adr-004-record-durability-and-sync.md) decides that every record is saved at its origin and forwarded when connected. That preserves records but cannot act on them during an outage. This ADR decides which functions run in the cloud, which run on the estate, and which run on the device itself, and why.
 
 
 ## Constraints from organizers
@@ -33,16 +33,16 @@ The application runs in the cloud. Two functions run on the estate because they 
 |---|---|---|
 | Online ticket purchase, payment, issuance | Cloud (ticketing service + hosted payment provider) | Payment providers are cloud hosted. The public buys before arriving. |
 | **Admission validation** | Gate scanners + **local admission coordinator** on the gate network | Must work during a WAN outage. Scanners hold a downloaded manifest (valid tickets, family-pass counts, revocations). The coordinator holds the shared admission log so gates agree on what is already used, which matters most for family-pass counts. If a scanner cannot reach the coordinator, it validates from its own cache and accepts a known duplicate window. That ticket group is routed to one designated scanner. Duplicates are visible on resync but cannot be undone. |
-| **Walk-up sales** | Staffed lane, cash only | Ticket issued at the gate with a stable ID, admitted, registered with the coordinator, synced under ADR-001. The cloud ticketing service accepts gate issued tickets as a distinct origin. End of day control: cash taken reconciles to gate issued tickets. Card store and forward (deferred authorization) is deferred as a later option. |
+| **Walk-up sales** | Staffed lane, cash only | Ticket issued at the gate with a stable ID, admitted, registered with the coordinator, synced under ADR-004. The cloud ticketing service accepts gate issued tickets as a distinct origin. End of day control: cash taken reconciles to gate issued tickets. Card store and forward (deferred authorization) is deferred as a later option. |
 | Sensor readings (enclosure, aquatic) | Sensor → LoRaWAN gateway → **edge MQTT broker with offline buffer** → cloud | The broker is the single estate to cloud path for device telemetry. It persists messages to disk while the uplink is down and publishes when it returns. Candidates: HiveMQ Edge, EMQX Edge. Either is replaceable by the other. |
-| Animal alert rules | Cloud evaluated | During an outage no automated alert fires. Keeper rounds every 2 hours are the control, so an alert is delayed by at most one round. The "age of oldest unsent record" metric from ADR-001 is shown to staff so they know when automated alerting is blind.|
+| Animal alert rules | Cloud evaluated | During an outage no automated alert fires. Keeper rounds every 2 hours are the control, so an alert is delayed by at most one round. The "age of oldest unsent record" metric from ADR-004 is shown to staff so they know when automated alerting is blind.|
 | Keeper/vet notes and observations | Tablet, synced direct to cloud | Second path to cloud, deliberately bypassing the broker. Tablets already have storage and an HTTP client, and notes carry attachments the broker path is not for. |
 | Footfall counting | On the counter or camera | Only counts leave the device. Video never leaves the estate except selected clips retained locally for count validation. |
-| Footfall reports and forecasts | Cloud | Historical analysis tolerates delay. Reports show input freshness per ADR-001. |
+| Footfall reports and forecasts | Cloud | Historical analysis tolerates delay. Reports show input freshness per ADR-004. |
 | Animal records, shared history, reporting | Cloud | One place to change behaviour and keep long term records. |
 | AI gateway (extraction, summaries, planning assistance) | Cloud | Assistance can pause during outages. Provider swap and verification are covered in the AI ADRs. |
 
-Two paths reach the cloud: broker-buffered telemetry, and direct device sync (tablets, scanners, staffed lane). Both obey ADR-001.
+Two paths reach the cloud: broker-buffered telemetry, and direct device sync (tablets, scanners, staffed lane). Both obey ADR-004.
 
 ## Consequences
 
