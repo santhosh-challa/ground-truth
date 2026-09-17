@@ -49,7 +49,7 @@ We are a group of product and engineering practitioners at [Zemoso Technologies]
 | Name                | Role                    | Profile                                                            |
 |-------------------------|-----------------------------|------------------------------------------------------------------------|
 | Ranjith DVL             | Product Manager             | [LinkedIn](https://www.linkedin.com/in/ranjithdvl/)             |
-| Santosh Kumar Challa    | Senior Tech Lead            | [LinkedIn](https://www.linkedin.com/in/skchalla/)               |
+| Santhosh Kumar Challa   | Senior Tech Lead            | [LinkedIn](https://www.linkedin.com/in/skchalla/)               |
 | Sourav Pujara           | Principal Software Engineer | [LinkedIn](https://www.linkedin.com/in/sourav-pujara-b2874762/) |
 | Sanket Kisan Raut       | Principal Software Engineer | [LinkedIn](https://www.linkedin.com/in/sanketkraut)             |
 | Mohammad Faizan Haidery | Senior DevOps Engineer      | [LinkedIn](https://linkedin.com/in/faizanhaidery)               |
