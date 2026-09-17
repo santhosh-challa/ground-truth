@@ -24,7 +24,7 @@ The 72nd Countess Von Digitalis has inherited a sprawling estate and a family bu
 - [3. Business outcomes we are designing for](#3-business-outcomes-we-are-designing-for)
 - [4. Solution overview](#4-solution-overview)
 - [5. Architectural quanta](#5-architectural-quanta)
-- [6. Architecture characteristics and fitness functions](#6-architecture-characteristics-and-fitness-functions)
+- [6. Fitness functions](#6-fitness-functions)
 - [7. Prioritized use cases](#7-prioritized-use-cases)
 - [8. Safety of the public, the animals and the plants](#8-safety-of-the-public-the-animals-and-the-plants)
 - [9. Cross-cutting capabilities](#9-cross-cutting-capabilities)
@@ -298,7 +298,7 @@ These are some of proposed fitness functions. The current CI harness does not ye
 
 | Characteristic   | Target                                                                                    | Fitness function                                                                                                                         |
 |----------------------|-----------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
-| Offline tolerance    | Full estate operation for at least 4 hours with no cloud link; safety unaffected indefinitely | Chaos test severs a zone node's uplink in staging. Assert ticketing, counting and safety trips continue and the backlog replays without loss |
+| Fault tolerance    | Full estate operation for at least 4 hours with no cloud link; safety unaffected indefinitely | Chaos test severs a zone node's uplink in staging. Assert ticketing, counting and safety trips continue and the backlog replays without loss |
 | Safety latency       | Detection to on-site alarm under 2 seconds, at the edge                                       | Synthetic trip injection measures end-to-end latency nightly per zone node                                                                   |
 | Elasticity           | Threefold visitor growth with no re-architecture                                              | Load test entry, app and telemetry paths at 3x peak. Assert p95 latency and cost per visitor stay within envelope                            |
 | Provider portability | Swap any Tier B or C provider within one working day, configuration only                      | Contract tests run every capability against a second provider weekly                                                                         |
@@ -318,7 +318,7 @@ These are some of proposed fitness functions. The current CI harness does not ye
 
 [Fitness test: provider portability](engineering-practices/fitness-tests/provider-portability.sh)
 
-Fitness test: safety latency](engineering-practices/fitness-tests/safety-latency.sh)
+[Fitness test: safety latency](engineering-practices/fitness-tests/safety-latency.sh)
 
 [Fitness test verifiability](engineering-practices/fitness-tests/verifiability.sh)
 
