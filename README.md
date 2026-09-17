@@ -334,6 +334,7 @@ Five prioritized use cases. Four of them got C2 diagram, a data flow and its own
 | 2      | [Animals and plants sensor data](#72-animals-and-plants-sensor-data)         | Load-bearing                                      |
 | 3      | [Footfall analytics](#73-footfall-analytics)                                 | Load-bearing, classical ML rather than generative |
 | 4      | [Feedback collection and assessment](#74-feedback-collection-and-assessment) | Load-bearing                                      |
+| 5      | [Growth and retention](#75-growth-and-retention)                             | Enhancement                                       |
 
 ### 7.1 Ticket and booking system
 
