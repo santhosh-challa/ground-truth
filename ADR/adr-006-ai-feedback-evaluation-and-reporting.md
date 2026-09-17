@@ -1,4 +1,4 @@
-# ADR-004: Decoupled AI Pipeline for Visitor Feedback Evaluation & Reporting
+# ADR-006: AI Pipeline for Visitor Feedback Evaluation & Reporting
 
 **Date:** 2026-09-16
 **Status:** Accepted
