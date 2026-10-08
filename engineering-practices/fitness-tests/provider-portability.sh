@@ -12,5 +12,5 @@ if [[ "$CONTRACT_TEST_RESULT" != "pass" ]]; then
 fi
 
 echo "PASS: Provider portability contract test passed."
-echo "Target: Tier B/C provider swap within one working day."
+echo "Target: Tier C provider swap within one working day."
 echo "Validation: Configuration-only provider change."

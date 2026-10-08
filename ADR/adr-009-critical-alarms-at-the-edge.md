@@ -116,3 +116,4 @@ Evidence status today: **Designed.** Nothing in this ADR has yet been simulated 
 ## Changelog
 
 - 7 October 2026: Proposed. Resolves the conflict between README §7.2, README §8 and ADR-005.
+- 8 October 2026: Accepted.
