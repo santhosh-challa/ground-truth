@@ -353,6 +353,12 @@ We chose a **service-based architecture for the core, with event-driven integrat
 - **Why not microservices.** It scores lowest on cost and simplicity, and its operational overhead would land on a small team. A service can still be split out later when its quantum's split triggers fire ([ADR-008](ADR/adr-008-ai-quantum-and-gateway.md)).
 - **Why not space-based or service-oriented.** Space-based solves an extreme elasticity problem we do not have, because telemetry scales with zones rather than visitors ([§14](#14-assumptions-and-capacity-planning)). Service-oriented's orchestration-heavy model scores poorly on agility.
 
+### System context (C1)
+
+Who uses the Estate Digital Platform, and which outside systems it depends on: visitors, staff and the Countess on one side; payment, AI providers, notifications, sensors and historical records on the other. Critical alarms are decided on the estate and go straight to sirens and pagers.
+
+![System context (C1)](assets/Ground-Truth-C1.png)
+
 ### Figure 1. Reference architecture
 
 Four tiers. The important property is where decisions are made: the further down the stack a decision sits, the less it can be disrupted. Safety decisions live at the bottom, learning lives at the top.
@@ -393,6 +399,8 @@ Two observations worth calling out.
 The **Estate quantum** is deliberately the largest. Plants, rides, staffing and animals share synchronous dependencies through zones and rosters, and separating them would have created chatty cross-quantum calls for no benefit. It carries the heaviest characteristic load in the system because it is where welfare, safety and operations meet.
 
 **AI is its own quantum**: the AI Gateway, the AI evaluators and the model lifecycle together ([ADR-008](ADR/adr-008-ai-quantum-and-gateway.md)). Its characteristics are completely different from everything around it, accuracy and explainability and observability rather than availability and recoverability, and it changes on a completely different cadence because the model landscape moves faster than the estate does. Isolating it is what makes the provider-swap story in section 11 credible rather than aspirational. We start with one AI quantum because the team is small. ADR-008 records when a capability or the gateway should split out. Approved edge models are released by this quantum but run on the zone edge nodes, so they keep working offline.
+
+**Feedback** spans three of these units ([ADR-006](ADR/adr-006-ai-feedback-evaluation-and-reporting.md)). Collection (the app, kiosks and the on-estate PII sanitizer) is a feedback-owned module that stays outside the AI quantum; evaluation runs in the AI quantum; and reporting sits in the Notification quantum, alongside the Report Service.
 
 ## 6. Fitness functions
 
@@ -465,7 +473,7 @@ This keeps payment data separated from the rest of the estate platform and ensur
 
 The Ticket Service is also responsible for maintaining the ticket lifecycle, while booking administrators can check the validity of an existing pass before admitting a visitor. The event model explicitly includes **Check pass validity → Pass validated → Ticket**.
 
-**Gate entry and wristband issuance.** At the estate entrance, the visitor presents the ticket or QR code to the **Gate Validator**. The validator checks the ticket/pass against the ticket and visit information and determines whether the visitor should be admitted.
+**Gate entry and wristband issuance.** At the estate entrance, the visitor presents the ticket or QR code to the **Gate Validator**. The validator checks the ticket/pass against local validation data on the gate network (a manifest of valid tickets, family-pass counts and revocations synced from the Ticket Service) and determines whether the visitor should be admitted. A local **admission coordinator** holds the shared admission log, so gates agree on what has already been used, and issues **capacity leases**: each gate admits only against a time-boxed share of the 7,500 safety ceiling ([ADR-005](ADR/adr-005-deployment-topology.md), [ADR-007](ADR/adr-007-ticketing-system.md)).
 
 Once the ticket or family pass is successfully validated and the visitor is admitted, **each visitor is provided with a wristband**. The wristband is associated with the visitor's validated ticket/pass and represents the access entitlement applicable to that visitor.
 
@@ -485,7 +493,9 @@ This prevents a visitor from using a valid estate ticket to access areas that we
 
 The event-storming model captures this as **Enter the estate → Visitor entered → Visit**.
 
-The Visit Service also provides the state required during pass validation so that ticket validity and previous entry/check-in information can be considered when processing an entry.
+Check-in events from the gates reach the Visit Service asynchronously, synced when connected, so the Visit Service holds the record of entries while the coordinator's admission log decides single use at the gate.
+
+**Walk-up sales.** Visitors without a ticket buy at a staffed counter. Counter sales are cash only; card store-and-forward is deferred ([ADR-005](ADR/adr-005-deployment-topology.md)). Each ticket is issued with a stable ID, registered with the admission coordinator, and synced to the Ticket Service as a distinct origin when connected ([ADR-004](ADR/adr-004-record-durability-and-sync.md)).
 
 **Booking administration and refunds.** Ticket collectors and booking administrators can create or cancel tickets and bulk bookings, validate passes, admit or deny visitors, and issue refunds. These responsibilities are explicitly identified for the actor in the architecture's actor model.
 
@@ -495,7 +505,7 @@ Refunds are handled through the Payment Service and the external payment process
 
 For ticket validation, the architecture uses cryptographically verifiable entitlement information so that the gate can validate the ticket without requiring a live network request. The gate can therefore continue validating tickets during temporary connectivity loss.
 
-Local visit/redemption information can subsequently be reconciled when connectivity is restored. This supports the architecture's broader offline-tolerance requirement, which explicitly requires ticketing and counting to continue when a zone node loses its uplink.
+Local visit/redemption information can subsequently be reconciled when connectivity is restored. This supports the architecture's broader offline-tolerance requirement, which explicitly requires admission and counting to continue when the estate loses its uplink.
 
 **Risks we are managing.** The main risks in this flow are payment/PII exposure, invalid or duplicate entry, incorrect entitlement validation and service/network unavailability.
 
@@ -538,6 +548,8 @@ A background AI task can suggest structured fields from the evidence. The keeper
 
 #### Monitoring aquatic and enclosure conditions
 
+![Animal sensing stack](assets/Animal-sensing-stack.png)
+
 Proposed aquatic measurements include water temperature, pH and dissolved oxygen. Terrestrial enclosure measurements include temperature and humidity. Keepers and vets select the measurements, thresholds and maintenance requirements appropriate to each enclosure. These readings describe environmental conditions, not an individual animal's diagnosis.
 
 Small sensor readings use LoRaWAN or an IP connection. The LoRaWAN path includes a radio gateway and network/application processing before decoded readings reach the estate MQTT broker. The broker buffers accepted records and forwards them to cloud ingestion. Device storage and replay must also cover a lost connection before the broker. MQTT alone does not guarantee end-to-end durability.
@@ -548,9 +560,9 @@ Staff and authorized administrators retrieve concerns through the application. T
 
 #### The jumping piranha problem
 
-A camera observes the tank at scheduled intervals. A fish-counting model runs on a capable camera or nearby processor. Images are processed locally; only estimated counts and metadata pass through the estate MQTT broker to the cloud. Camera links use Ethernet or suitable Wi-Fi, not LoRaWAN. Tank video is not streamed to the cloud.
+A camera observes the tank at scheduled intervals. A fish-counting model runs on the zone edge node, released and version-pinned through the AI quantum's model lifecycle ([ADR-008](ADR/adr-008-ai-quantum-and-gateway.md)). Images are processed locally; only estimated counts and metadata pass through the estate MQTT broker to the cloud. Camera links use Ethernet or suitable Wi-Fi, not LoRaWAN. Tank video is not streamed to the cloud.
 
-Each count record includes its stable ID, tank/camera identity, observation time, model version and view-quality status. The camera or processor buffers records while disconnected. The Animal application displays these estimates alongside keeper-recorded counts and observations.
+Each count record includes its stable ID, tank/camera identity, observation time, model version and view-quality status. The edge node buffers records while disconnected. The Animal application displays these estimates alongside keeper-recorded counts and observations.
 
 The result initially represents fish visible in an observation, not a guaranteed census of the entire tank. Keepers check the estimates against reference observations using a consistent view and sampling method. Counts from successive frames or overlapping cameras are not added together, and unusable views are not recorded as zero fish. Unexpected changes prompt review; keeper corrections remain separate from the original model estimate.
 
@@ -575,7 +587,8 @@ AI assists with extraction, summaries and the camera-counting pilot. General beh
 #### ADRs
 
 - [record durability ADR-004](ADR/adr-004-record-durability-and-sync.md)
-- [deployment ADR-005](ADR/adr-005-deployment-topology.md).
+- [deployment ADR-005](ADR/adr-005-deployment-topology.md)
+- [critical alarms at the edge ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md)
 
 #### Plants
 
@@ -595,7 +608,7 @@ The most valuable observational instrument on the estate is an experienced keepe
 
 **Scope.** Visitor tracking, finding the popularity, working out which parts of the estate people actually spend time in, popularity matrix dashboard, forecast matrix dashboard.
 
-**Sensing occupancy without surveilling anyone.** Zone occupancy and dwell time are derived from footfall counts at zone boundaries, aggregated per zone per batch window. Edge Gateways buffer readings locally through Wi-Fi outages and flush them on reconnect. Ingestion writes are idempotent, keyed by (device_id, zone_id, window), so retries and buffer replays during an outage can never inflate a count. Where a boundary is too open to instrument, edge computer vision produces a headcount from a frame and discards the frame. We do not identify, track or re-identify individuals, and we deploy no facial recognition anywhere on the estate.
+**Sensing occupancy without surveilling anyone.** Zone occupancy and dwell time are derived from footfall counts at zone boundaries, aggregated per zone per batch window. The estate MQTT broker buffers readings locally through Wi-Fi outages and flushes them on reconnect ([ADR-005](ADR/adr-005-deployment-topology.md)). Ingestion writes are idempotent, keyed by (device_id, zone_id, window), so retries and buffer replays during an outage can never inflate a count. Where a boundary is too open to instrument, edge computer vision produces a headcount from a frame and discards the frame. We do not identify, track or re-identify individuals, and we deploy no facial recognition anywhere on the estate.
 
 **A rule-based score, plus deliberately modest predictions.**
 
@@ -638,7 +651,7 @@ Short-horizon wait-time prediction: from current queue occupancy and recent thro
 
 **Assessment Pipeline.** Raw text flows through an asynchronous, multi-stage pipeline designed to extract meaning without relying on live synchronous AI calls. First, language detection identifies the input language to route it to the appropriate NLP model. Next, sentiment and theme extraction classifies the emotion, such as frustration or delight, along with the operational category, like cleanliness, queue length, or safety. Each item carries two zone fields: where it was submitted, and the zone it is about (confirmed by the visitor, since a complaint at the aquarium exit may be about an earlier ride). Finally, the structured item is routed to the relevant zone manager or veterinary staff. Urgent safety or welfare reports do not wait for this pipeline: keyword rules and a visitor "this is urgent" option send them straight to zone staff at collection time.
 
-**Guardrails and Degradation.** Because this system handles unstructured human input, it requires a strict defensive architecture. As a Tier C capability, all personally identifiable information (PII) is deterministically stripped at the edge before any model call is made, ensuring no free text is ever sent to an external provider without redaction. Furthermore, because the feedback evaluator is not operationally critical, it is designed for graceful degradation. If the external AI provider experiences an outage, raw feedback is simply buffered locally on the edge nodes or in the message broker. This ensures collection continues seamlessly, and processing resumes once the provider is restored.
+**Guardrails and Degradation.** Because this system handles unstructured human input, it requires a strict defensive architecture. As a Tier C capability, all personally identifiable information (PII) is deterministically stripped at the edge before any model call is made, ensuring no free text is ever sent to an external provider without redaction. Furthermore, because the feedback evaluator is not operationally critical, it is designed for graceful degradation. If the external AI provider experiences an outage, sanitized feedback is simply buffered locally on the edge nodes or in the message broker; raw feedback is never stored before PII is stripped. This ensures collection continues seamlessly, and processing resumes once the provider is restored.
 
 **The Steward Integration & The Visitor Loop.** When the AI Evaluator identifies a recurring theme—such as the glass on the jumping piranha tank being too dirty to see through—it automatically generates an advisory on The Steward dashboard. The Countess or the relevant Zone Manager can then review the supporting evidence and approve a maintenance ticket. Once the work is completed, the system supports a "You Spoke, We Acted" feedback loop, allowing the estate to email the complaining visitors to demonstrate that their input directly improved the estate.
 
@@ -691,7 +704,7 @@ Safety originates inside the sensor data use case, but we have pulled it into it
 
 ### Layer 1: deterministic, and sufficient on its own
 
-Hardwired sensing with fixed local trip logic. Barrier and gate contacts, water-level float switches, perimeter tripwires and emergency stops, wired to local siren and pager output on the zone edge node. No model, no network, no inference.
+Hardwired sensing with fixed local trip logic. Barrier and gate contacts, water-level float switches, perimeter tripwires and emergency stops, plus critical life-support probes (dissolved oxygen, water temperature, pump and flow), wired to local siren and pager output on the zone edge node. No model, no network, no inference ([ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md)).
 
 We designed this layer first and deliberately made it sufficient, so that every AI claim we make afterwards is additive rather than load-bearing. We do not claim this alone makes the estate licensable or insurable; [ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md) sets out the assurance plan (hazard scenarios, threshold ownership, proof tests, acceptance before a zone opens).
 
@@ -823,7 +836,7 @@ The brief raises this twice, so we treated it as a first-class architectural req
 |----------|--------------------------------------------------------------|----------------------------------------------------------------------------------|--------------------------------------------------------------|
 | A        | Safety camera detection, piranha counting (edge vision)      | Self-hosted, version-pinned, open weights. No external provider, ever            | No impact. We were never exposed                             |
 | B        | Forecasting and anomaly detection, recommender               | Self-hosted, but a deterministic or historical fallback is mandatory             | Falls back to rules or history, swap within a day, no outage |
-| C        | Feedback assessment, visitor assistant, operations summaries | Provider acceptable, graceful degradation required                               | Feature degrades or pauses. Nothing critical is lost         |
+| C        | Feedback assessment, keeper-note extraction and evidence summaries, visitor assistant, operations summaries | Provider acceptable; a second provider and graceful degradation required | Feature degrades or pauses. Nothing critical is lost         |
 
 The load-bearing point is that nothing which keeps a person or an animal safe depends on a commercial API. That is a deliberate architectural constraint rather than a preference, and it is what allows us to adopt fast-moving models elsewhere without taking on existential risk.
 
@@ -873,7 +886,7 @@ Three of our capabilities therefore generate continuous free labels with no labe
 2.  **A CI eval gate.** Any model, prompt or threshold change must clear thresholds or the build fails
 3.  **Shadow and canary release.** The candidate runs in parallel with no user impact, then canaries with automatic rollback on regression
 4.  **Production monitors** for input and output drift, confidence collapse, silent-failure self-checks and cost per decision
-5.  **Human disposition capture.** Every alert is closed with a verdict of real, false or unsure. This is the label source, and it costs a keeper seconds per alert
+5.  **Human disposition capture.** Every alert a person handles is closed with a verdict of real, false or unsure, and automatic (L0/L1) outcomes are sampled for review ([ADR-010](ADR/adr-010-ai-authority-by-risk.md)). This is the label source, and it costs a keeper seconds per alert
 
 | Capability            | Ground truth source                         | Posture                                                                    | Misbehaviour signal in production                                      |
 |---------------------------|-------------------------------------------------|--------------------------------------------------------------------------------|----------------------------------------------------------------------------|
@@ -1042,7 +1055,7 @@ All ADRs live in [ADR/](ADR/) and follow the standard format: title, status, con
 | [adr-001-popularity-scoring-approach](ADR/adr-001-popularity-scoring-approach.md)               | Popularity & trend scoring approach: hybrid rule-based baseline with a phased ML forecast/anomaly layer                                                                                                                                                                                                                                                                                                                                                                                   | Accepted   |
 | [adr-002-idempotent-footfall-reconciliation](ADR/adr-002-idempotent-footfall-reconciliation.md) | Idempotent reconciliation strategy for zone footfall counts                                                                                                                                                                                                                                                                                                                                                                                                                               | Accepted   |
 | [adr-003-model-monitoring-and-drift](ADR/adr-003-model-monitoring-and-drift.md)                 | Model monitoring and drift handling for popularity forecasting                                                                                                                                                                                                                                                                                                                                                                                                                            | Accepted   |
-| [adr-004-record-durability-and-sync](ADR/adr-004-record-durability-and-sync.md)                 | Record Durability and Syncing for monitoring enclosure conditions                                                                                                                                                                                                                                                                                                                                                                                                                            | Accepted   |
+| [adr-004-record-durability-and-sync](ADR/adr-004-record-durability-and-sync.md)                 | Every record is saved at its origin before it is confirmed, then synced idempotently when connected: keeper notes, sensor readings, counts, admissions and gate-issued tickets                                                                                                                                                                                                                                                                                                                                                                                                                            | Accepted   |
 | [adr-005-deployment-topology](ADR/adr-005-deployment-topology.md) | Cloud-primary deployment; admission, critical alarms (ADR-009), telemetry buffering and approved edge AI run on the estate; placement rule device / estate edge / cloud | Accepted (amended) |
 | [AI Feedback Evaluation And Reporting](ADR/adr-006-ai-feedback-evaluation-and-reporting.md) | Asynchronous feedback pipeline: edge collection with PII stripping, AI evaluation through the AI Gateway (in the AI quantum, ADR-008), deterministic reporting that never calls a model, and a separate urgent-safety path | Accepted (amended) |
 | [adr-007-ticketing-system](ADR/adr-007-ticketing-system.md) | Four core services with clear aggregate ownership: User, Ticket, Payment and Visit. Gate Validator enforces validity, area entitlement and redemption, supports offline entry, and stays within the safe capacity ceiling through capacity leases | Accepted (amended) |
@@ -1052,25 +1065,29 @@ All ADRs live in [ADR/](ADR/) and follow the standard format: title, status, con
 
 ## Diagram index
 
+In reading order: context and platform (§1–§4), then each use case (§7), safety (§8), AI (§11), profitability (§13) and the working artifacts (§2).
+
 | S. No. | Diagram                                 | Type                     | Location                                |
 |------------|---------------------------------------------|------------------------------|---------------------------------------------|
-| 1          | Estate reference architecture               | Layered container view       | assets/reference-architecture.png           |
-| 2          | Platform topology                           | Context and topology         | assets/platform-topology-diagram.png        |
-| 3          | Offline-first data spine and priority lanes | Data flow                    | assets/offline-data-spine.png               |
-| 4          | Safety chain, two independent layers        | Flow and decision            | assets/safety-chain.png                     |
-| 5          | AI Gateway and Ground Truth Ledger          | Component with feedback loop | assets/ai-gateway-ground-truth-ledger.png   |
-| 6          | Profit lever tree                           | Business model               | assets/Profit-lever-tree.png                |
-| 7          | Animal Monitoring C2                        | Architecture                 | assets/Animal_Monitoring_C2.png             |
-| 8          | Feedback Evaluation Reporting               | Architecture                 | assets/Feedback_Evaluation_Reporting_C2.png |
-| 9         | Zone Popularity                             | Architecture                 | assets/Zone_Popularity_C2.png               |
-| 10         | Ticketing                                   | Architecture                 | assets/Ticketing_C2.png                     |
-| 11         | Ticketing flow                              | Flow                         | flow-diagrams/Ticketing_flow.png            |
-| 12         | Care taker observation flow                 | Flow                         | flow-diagrams/Care_Taker_Observation_flow.png |
-| 13         | Animal alert review and summary             | Flow                         | flow-diagrams/Animal_Alert_Review_and_Summary.png |
-| 14         | Zone popularity flow                        | Flow                         | flow-diagrams/Zone_Popularity_Flow.png      |
-| 15         | Feedback evaluation and reporting flow      | Flow                         | flow-diagrams/Feedback_Evaluation_Reporting_Flow.png |
-| 16         | Architecture characteristics worksheet      | Worksheet                    | other-artifacts/Architecture Characteristics Worksheet.png |
-| 17         | Architecture styles worksheet               | Worksheet                    | other-artifacts/Architecture Sytles Worksheet.png |
+| 1          | System context (C1)                         | Context                      | assets/Ground-Truth-C1.png                  |
+| 2          | Estate reference architecture               | Layered container view       | assets/reference-architecture.png           |
+| 3          | Platform topology                           | Context and topology         | assets/platform-topology-diagram.png        |
+| 4          | Offline-first data spine and priority lanes | Data flow                    | assets/offline-data-spine.png               |
+| 5          | Ticketing                                   | Architecture                 | assets/Ticketing_C2.png                     |
+| 6          | Ticketing flow                              | Flow                         | flow-diagrams/Ticketing_flow.png            |
+| 7          | Animal sensing stack                        | Component                    | assets/Animal-sensing-stack.png             |
+| 8          | Animal Monitoring C2                        | Architecture                 | assets/Animal_Monitoring_C2.png             |
+| 9          | Care taker observation flow                 | Flow                         | flow-diagrams/Care_Taker_Observation_flow.png |
+| 10         | Animal alert review and summary             | Flow                         | flow-diagrams/Animal_Alert_Review_and_Summary.png |
+| 11         | Zone Popularity                             | Architecture                 | assets/Zone_Popularity_C2.png               |
+| 12         | Zone popularity flow                        | Flow                         | flow-diagrams/Zone_Popularity_Flow.png      |
+| 13         | Feedback Evaluation Reporting               | Architecture                 | assets/Feedback_Evaluation_Reporting_C2.png |
+| 14         | Feedback evaluation and reporting flow      | Flow                         | flow-diagrams/Feedback_Evaluation_Reporting_Flow.png |
+| 15         | Safety chain, two independent layers        | Flow and decision            | assets/safety-chain.png                     |
+| 16         | AI Gateway and Ground Truth Ledger          | Component with feedback loop | assets/ai-gateway-ground-truth-ledger.png   |
+| 17         | Profit lever tree                           | Business model               | assets/Profit-lever-tree.png                |
+| 18         | Architecture characteristics worksheet      | Worksheet                    | other-artifacts/Architecture Characteristics Worksheet.png |
+| 19         | Architecture styles worksheet               | Worksheet                    | other-artifacts/Architecture Sytles Worksheet.png |
 
 ## Actors
 
@@ -1091,7 +1108,8 @@ Identified through the actor-action and event storming exercise in section 2.
 | Evals                              | Evaluates AI outputs and identifies corrections. Deliberately modelled as its own actor                                                         |
 | Platform administrator             | Administers the shared platform and operationally owns the AI Gateway and evaluation layer                                                      |
 | MQTT edge sensor and camera        | Captures video, foot traffic and environmental signals                                                                                          |
-| Edge AI gateway                    | Validates tickets offline, runs local inference, queues data, runs safety-critical inference locally                                            |
+| Zone edge node                     | Runs deterministic critical-alarm rules, the estate MQTT broker and approved advisory edge inference (counting, Layer 2 camera alerts). No model is ever in the critical-alarm path |
+| Admission coordinator and gate scanners | Validate tickets offline from local validation data on the gate network, hold the shared admission log and enforce capacity leases |
 | Cloud AI and analytics engine      | Ingests estate data, trains models, hosts the AI abstraction and evaluation layer                                                               |
 | AI model provider, external        | Interchangeable providers, deliberately treated as replaceable                                                                                  |
 | Payment processor                  | Handles card transactions. Segregated from any generative AI path                                                                               |

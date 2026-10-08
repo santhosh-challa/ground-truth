@@ -116,3 +116,4 @@ Split a capability (or the gateway) into its own quantum when any of these becom
 ## Changelog
 
 - 7 October 2026: Proposed. Resolves the conflict between README §5 and ADR-006.
+- 8 October 2026: Accepted.
