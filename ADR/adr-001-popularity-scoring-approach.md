@@ -104,3 +104,15 @@ phased rollout itself is.
     Phase 2 once enough real history exists to train and validate it. The
     report is fully usable from day one on the baseline score alone; the
     trend/anomaly layer is additive, not a launch dependency.
+
+## Enforcement
+
+| Check | What it verifies | Evidence status |
+|---|---|---|
+| `baseline_primary` (planned) | In the architecture model, the Investment & Improvement Report depends on the rule-based score, and the ML forecast/anomaly layer is optional input only | Planned |
+| Forecast backtest | The forecast beats a seasonal-naive baseline on a temporal holdout before Phase 2 enables the ML layer | Not yet run (no history) |
+
+## Changelog
+
+- 2026-09-15: Accepted.
+- 2026-10-07: Added the Enforcement section. Decision unchanged.

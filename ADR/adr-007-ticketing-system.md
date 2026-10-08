@@ -1,7 +1,8 @@
 # **ADR-007: Ticketing, Pass & Entry  Architecture**
 
 **Date:** 2026-09-15  
- **Status:** Accepted
+ **Status:** Accepted  
+ **Amended:** 2026-10-07 (see Changelog)
 
 ## **Context**
 
@@ -253,7 +254,18 @@ Connectivity Restored
 Sync → Visit Service
 ```
 
-The exact offline cache duration and conflict/replay policy must be defined during implementation.
+The local admission coordinator and scanner behaviour are placed by [ADR-005](adr-005-deployment-topology.md). Capacity during disconnection is controlled by **capacity leases**:
+
+* The estate's safe capacity ceiling (7,500 concurrent visitors, README §14) is set by safety and welfare limits, never by demand. The coordinator tracks occupancy (entries minus exits).
+* The coordinator gives each gate a **lease**: a time-boxed share of the remaining ceiling. A gate admits only while its lease has balance and has not expired, then stops and escalates to a supervisor.
+* Capacity held by an unreachable gate's unexpired lease is **never reissued** until that lease has expired, so a partition cannot push the estate over the ceiling.
+
+Lease sizes, lease durations and cache validity are tuning values, set during the pilot.
+
+### **What offline validation does and does not guarantee**
+
+* A **signed ticket proves authenticity**, not single use. Single use is enforced by the coordinator's shared admission log and, if the coordinator is unreachable, by each scanner's local log within the known duplicate window (ADR-005).
+* **Idempotent sync** (stable entry-event IDs) prevents an entry from being *counted* twice in the Visit Service. It cannot undo a duplicate *physical* entry. Duplicates are flagged on resync for follow-up.
 
 ---
 
@@ -307,8 +319,24 @@ estate/ticketing/{ticketId}/status
 | ----- | ----- |
 | Ticket Service is business-critical | HA \+ horizontal scaling |
 | Offline gate may have stale data | Controlled cache validity \+ synchronization |
-| QR can be copied | Signed credential \+ redemption tracking |
+| QR can be copied | Signed credential proves authenticity; the redemption log enforces single use |
 | Duplicate offline redemption | Unique event ID \+ reconciliation |
 | Payment and ticket state can diverge | Idempotency \+ payment webhook reconciliation |
 | Async events are eventually consistent | Retry \+ idempotent consumers |
 
+---
+
+# **Enforcement**
+
+| Check | What it verifies | Evidence status |
+| ----- | ----- | ----- |
+| `ai_free_ticketing` (planned) | No component in the Ticket quantum depends on the AI quantum or any model provider. A deliberately invalid case (ticket service depending on the AI Gateway) must fail | Planned |
+| Offline admission simulation (optional) | WAN outage, coordinator failure, duplicate/late entry events, restart recovery and lease exhaustion | Not built |
+
+# **Changelog**
+
+* 2026-09-15: Accepted.
+* 2026-10-07: Amended.
+  * Added a short capacity-lease definition and the limits of offline validation (authenticity vs single use; counting vs physical entry).
+  * Replaced "to be defined during implementation" with rules that implementation tunes.
+  * Added the Enforcement section.
