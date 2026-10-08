@@ -25,7 +25,7 @@ Model confidence is one input to measured performance, and only once its calibra
 
 The system may tighten on its own, for example by pausing a paid animal encounter. Loosening needs a named person: only a person may resume that encounter.
 
-#### Authority levels
+## Authority levels
 
 | Level | Meaning |
 |-------|---------|
@@ -36,7 +36,7 @@ The system may tighten on its own, for example by pausing a paid animal encounte
 
 Critical alarms are not on this scale. They are deterministic rules on the zone edge node [ADR-009](adr-009-critical-alarms-at-the-edge.md), and every lockdown, evacuation, gate closure and all-clear is L3.
 
-#### Risk and authority table
+## Risk and authority table
 
 | Capability | If it's wrong | Authority | Guardrail | When it fails or is unavailable |
 |------------|---------------|-----------|-----------|---------------------------------|
@@ -55,18 +55,19 @@ Critical alarms are not on this scale. They are deterministic rules on the zone 
 | Wait-time display and itinerary suggestions (Tier B) | Frustrated visitors, or herding them into a crowded zone | **L0.** Wait times shown as a range; suggestions within density caps | The safety layer's density cap is a hard constraint. Share cap per attraction. Held-out control group | Rule-based itinerary (Stage A); historical wait times |
 | Popularity trends and anomalies (Tier B) | A wrong investment decision | **L0** for the annotation. **L2** for capital investment and pricing; the Countess decides | The rule score stays primary. Trends suppressed on drift [ADR-009](adr-009-critical-alarms-at-the-edge.md) | Rule score alone |
 
-#### How a level changes
+## How a level changes
 
 - **New capabilities start at L2**, unless their harm is negligible, and are released through shadow mode first.
 - **Promotion** (for example L2 → L1) needs measured performance above an agreed threshold on the fixed evaluation set *and* on production samples, held for an agreed period. The capability's decision owner approves it.
 - **Demotion is automatic.** When a Ledger monitor breaches its threshold (accuracy, drift or input health), the capability drops one level and its owner is notified.
 - **L3 is fixed.** No measured performance moves a safety or medical decision out of human hands.
 
-#### Keeping the evidence honest
+## Keeping the evidence honest
 
 - **Evaluation sets are fixed and versioned,** separate from ongoing labels, so promotion thresholds are never tuned on the same data used to judge them.
 - **Human dispositions are recorded with provenance.** People can be wrong, and can be influenced by the AI output they were shown.
 - **Small sets are demonstrators, not assurance.** Zero errors in 30 cases still allows an error rate of up to about 9.5%.
 
 ## Changelog
+
 - 7 October 2026: Proposed. Responds to judge feedback on risk-based AI strategy and to the architect's point that low-risk decisions may not need a human in the loop.
