@@ -70,9 +70,5 @@ Critical alarms are not on this scale. They are deterministic rules on the zone 
 
 ## Changelog
 
-<<<<<<< HEAD
-- 7 October 2026: Proposed. Responds to judge feedback on risk-based AI strategy and to the architect's point that low-risk decisions may not need a human in the loop.
-=======
 - 7 October 2026: Proposed. Responds to judge feedback on risk-based AI strategy and to the architect's point that low-risk decisions may not need a human in the loop.
 - 8 October 2026: Accepted.
->>>>>>> 4c2222e493a045411de1147f63576fef04041813
