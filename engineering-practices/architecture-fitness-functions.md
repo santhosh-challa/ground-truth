@@ -48,7 +48,7 @@ Fail if p95 latency or cost per visitor exceeds the agreed envelope.
 
 **Target:**
 
-A Tier B/C provider should be replaceable within one working day using configuration changes rather than application rearchitecture.
+A Tier C provider should be replaceable within one working day using configuration changes rather than application rearchitecture.
 
 **Test:**
 
@@ -196,6 +196,8 @@ A failed fitness-function job prevents the pipeline from being considered succes
 ## Current GitHub Actions Workflow
 
 The current workflow runs all seven fitness functions independently. This makes the failure visible at the individual architecture-characteristic level instead of having one combined test hide which requirement failed.
+
+> **Current status.** Today these scripts check supplied or default values; they do not yet measure the running system. Tests that need staging hardware (offline tolerance, safety latency) report as skipped until that hardware exists. A green run below therefore means the checks are wired into CI, not that the targets have been demonstrated. See the status column in README §6.
 
 ```text
 GitHub Actions
