@@ -80,3 +80,4 @@ Model confidence is **one input** to "measured performance" (once its calibratio
 ## Changelog
 
 - 7 October 2026: Proposed. Responds to judge feedback on risk-based AI strategy and to the architect's point that low-risk decisions may not need a human in the loop.
+- 8 October 2026: Accepted.
