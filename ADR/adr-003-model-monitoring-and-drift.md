@@ -88,3 +88,15 @@ Notification Service alerts an ops/data engineer for review.
     Dashboard (e.g. "trend insight temporarily unavailable — under review")
     rather than only alerting engineers, so business stakeholders can see
     and escalate if it persists.
+
+## Enforcement
+
+| Check | What it verifies | Evidence status |
+|---|---|---|
+| Drift suppression test (planned) | When forecast error crosses the threshold over the rolling window, ML annotations are suppressed, the report falls back to the rule score, and the dashboard shows the fallback state | Planned |
+| Threshold calibration | Thresholds are set against historical data before go-live | Not yet possible (no history) |
+
+## Changelog
+
+- 2026-09-15: Accepted.
+- 2026-10-07: Added the Enforcement section. Decision unchanged.

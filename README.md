@@ -149,7 +149,7 @@ A sample of the chains this produced:
 
 Two things fell out of this exercise that shaped the whole design.
 
-The first is that **the AI System is an actor, not a layer**. Once we wrote it in the same column as the vet and the rides operator, it became obvious that every one of its actions had to terminate in either a human approval step or a recorded evaluation. That is where "escalate to human for approval" and the separate Evals actor came from, and it is the origin of the Ground Truth Ledger.
+The first is that **the AI System is an actor, not a layer**. Once we wrote it in the same column as the vet and the rides operator, it became obvious that every one of its actions had to be accountable: either a human decides, or the action is recorded and sampled against ground truth. How much a capability may do on its own is set by risk and measured performance ([ADR-010](ADR/adr-010-ai-authority-by-risk.md)). That is where "escalate to human for approval" and the separate Evals actor came from, and it is the origin of the Ground Truth Ledger.
 
 The second is that **care takers and vets need to record what they see offline, without typing forms**. That requirement came out of the actor work rather than the brief, and it drove the offline-first posture of the keeper tooling.
 
@@ -181,7 +181,7 @@ Cross-cutting:
 7.  Alert notifications and the notification service
 8.  Admin dashboard
 
-Each of the four of five prioritized carry a C2 diagram, a data flow and its own ADRs.
+Four of the five prioritized use cases carry a C2 diagram, a data flow and their own ADRs.
 
 ### 2.5 The four tests every idea had to survive
 
@@ -198,7 +198,7 @@ We do not force-fit AI. Each use case carries an explicit verdict, and where det
 | Augments, never decides | A deterministic layer is primary. AI adds reach but never authority        |
 | Deliberately AI-free    | Rules and cryptography do this better. Adding AI would add risk, not value |
 
-Across the four prioritized use cases, AI is load-bearing in three, an enhancement in one, and deliberately absent from one. Safety falls in the third category. Stating that distribution openly is the opposite of AI-washing, and we think it is a more honest answer than claiming AI everywhere.
+Across the five prioritized use cases, AI is load-bearing in one (feedback assessment), an enhancement in three, and deliberately absent from one (ticketing). Safety, covered separately in section 8, falls in the third category: augments, never decides. Stating that distribution openly is the opposite of AI-washing, and we think it is a more honest answer than claiming AI everywhere.
 
 ## 3. Business outcomes we are designing for
 
@@ -245,9 +245,9 @@ We present this as a model, not a forecast. The point is the structure and the s
 The estate is a physically distributed, network-hostile environment where a handful of decisions are safety-critical and most are not. That asymmetry drives the whole design.
 
 - One shared platform with domain modules, not three separate platforms and not a monolith.
-- Patchy Wi-Fi treated as the normal operating condition. Zone edge nodes run the estate; the cloud is where we learn, not where we operate
+- Patchy Wi-Fi treated as the normal operating condition. What must survive an outage runs on the estate (admission, critical alarms, telemetry buffering); what can wait runs in the cloud, which is where we learn ([ADR-005](ADR/adr-005-deployment-topology.md))
 - Every data flow classified into P0 safety, P1 operational, P2 analytical, so scarce bandwidth degrades analytics first and safety never
-- Every model call behind one AI Gateway, so a provider price change, deprecation or shutdown is a configuration change
+- Every call to an external model provider goes through one AI Gateway, so a provider price change, deprecation or shutdown is a configuration change. Self-hosted models are governed in the same place but run where they are used ([ADR-008](ADR/adr-008-ai-quantum-and-gateway.md))
 - Models tiered by criticality. Anything safety-critical is self-hosted and version-pinned with a deterministic fallback
 - Verification built as a running system rather than a test phase
 
@@ -283,28 +283,29 @@ An architecture quantum is an independently deployable artifact with high functi
 | Estate       | Plant Service, Ride Service, Staffing Service, Animal Service | Plant, PlantHealthRecord, Ride, Zone, Roster, Enclosure, Animal, AnimalHealthRecord, FeedingRecord, HealthRecord | Fault tolerance, workflow, accuracy, explainability, recoverability |
 | Device Data  | Device Service                                                | Machine, Sensor, SensorRecord                                                                                    | Workflow, fault tolerance                                           |
 | Job          | Scheduler Service                                             | Schedule (Job)                                                                                                   | Workflow                                                            |
-| AI Gateway   | AI Gateway Service                                            | AI Model, ModelProvider, ModelRouter                                                                             | Accuracy, explainability, observability                             |
+| AI           | AI Gateway Service, AI evaluators, model registry and evaluation | AI Model, ModelProvider, ModelRouter, Evaluation                                                              | Accuracy, explainability, observability                             |
 | Notification | Notification Service, Report Service                          | Incident, Notification, Report                                                                                   | Availability, recoverability                                        |
 
 Two observations worth calling out.
 
 The **Estate quantum** is deliberately the largest. Plants, rides, staffing and animals share synchronous dependencies through zones and rosters, and separating them would have created chatty cross-quantum calls for no benefit. It carries the heaviest characteristic load in the system because it is where welfare, safety and operations meet.
 
-The **AI Gateway is its own quantum**. Its characteristics are completely different from everything around it, accuracy and explainability and observability rather than availability and recoverability, and it changes on a completely different cadence because the model landscape moves faster than the estate does. Isolating it is what makes the provider-swap story in section 11 credible rather than aspirational.
+**AI is its own quantum**: the AI Gateway, the AI evaluators and the model lifecycle together ([ADR-008](ADR/adr-008-ai-quantum-and-gateway.md)). Its characteristics are completely different from everything around it, accuracy and explainability and observability rather than availability and recoverability, and it changes on a completely different cadence because the model landscape moves faster than the estate does. Isolating it is what makes the provider-swap story in section 11 credible rather than aspirational. We start with one AI quantum because the team is small. ADR-008 records when a capability or the gateway should split out. Approved edge models are released by this quantum but run on the zone edge nodes, so they keep working offline.
 
 ## 6. Fitness functions
 
-These are some of proposed fitness functions. The current CI harness does not yet demonstrate the stated operational guarantees
+These are the fitness functions for our driving characteristics, and the ADR each one enforces. **Status is stated honestly:** the scripts currently in CI check supplied or default values; they do not yet measure the system. Runtime tests need staging hardware and will report as skipped until it exists. Each ADR's Enforcement section lists its checks.
 
-| Characteristic   | Target                                                                                    | Fitness function                                                                                                                         |
-|----------------------|-----------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
-| Fault tolerance    | Full estate operation for at least 4 hours with no cloud link; safety unaffected indefinitely | Chaos test severs a zone node's uplink in staging. Assert ticketing, counting and safety trips continue and the backlog replays without loss |
-| Safety latency       | Detection to on-site alarm under 2 seconds, at the edge                                       | Synthetic trip injection measures end-to-end latency nightly per zone node                                                                   |
-| Elasticity           | Threefold visitor growth with no re-architecture                                              | Load test entry, app and telemetry paths at 3x peak. Assert p95 latency and cost per visitor stay within envelope                            |
-| Provider portability | Swap any Tier B or C provider within one working day, configuration only                      | Contract tests run every capability against a second provider weekly                                                                         |
-| Verifiability        | Every AI decision traceable to inputs, model version and prompt version                       | Audit sampler reconstructs lineage for random production decisions                                                                           |
-| Cost predictability  | Inference spend bounded, alerting before overrun                                              | Gateway budget caps enforced at runtime, nightly variance report                                                                             |
-| Privacy              | No biometric identification anywhere; Say routine camera video stays local; authorized keeper attachments may upload                                               |
+| Characteristic       | Target                                                                                    | Fitness function                                                                                                                         | Enforces            | Status                    |
+|----------------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|---------------------|---------------------------|
+| Fault tolerance      | Admission, counting and critical alarms continue for at least 4 hours with no cloud link; backlog replays without loss | Chaos test severs a zone node's uplink in staging                                                                    | ADR-004, 005, 009   | Specified; needs staging  |
+| Safety latency       | Detection to on-site alarm under 2 seconds, on the edge node                               | Synthetic trip injection per zone node                                                                                                   | ADR-009             | Specified; needs staging  |
+| Elasticity           | Threefold visitor growth with no re-architecture                                           | Load test entry, app and telemetry paths at 3x peak; p95 latency and cost per visitor within envelope                                    | —                   | Specified                 |
+| Provider portability | Swap any Tier C provider within one working day, configuration only                        | Each capability passes its acceptance thresholds on its second provider                                                                  | ADR-008             | Planned                   |
+| Verifiability        | Every AI decision traceable to inputs, model version and prompt version                    | Audit sampler reconstructs lineage for random production decisions                                                                       | ADR-003, 006, 008   | Planned                   |
+| Cost predictability  | Inference spend bounded, alerting before overrun                                           | Gateway budget caps per capability, alert below the cap                                                                                  | ADR-008             | Planned                   |
+| Privacy              | No biometric identification anywhere; routine camera video stays on the estate            | Static scan for face-recognition libraries                                                                                               | Section 17          | Planned                   |
+| Decision conformance | Ticketing stays AI-free; critical alarms never depend on the cloud                         | Architecture checks against the declared model, each with a deliberately invalid case that must fail                                    | ADR-007, 009        | Planned                   |
 
 [github workflows](.github/workflows/fitness-functions.yml)
 
@@ -322,7 +323,7 @@ These are some of proposed fitness functions. The current CI harness does not ye
 
 [Fitness test verifiability](engineering-practices/fitness-tests/verifiability.sh)
 
-[Fitness test architecture-fitness-functions](engineering-practices/fitness-tests/architecture-fitness-functions.sh)
+[Fitness functions: design and CI flow](engineering-practices/architecture-fitness-functions.md)
 
 ## 7. Prioritized use cases
 
@@ -331,8 +332,8 @@ Five prioritized use cases. Four of them got C2 diagram, a data flow and its own
 | # | Use case                                                                        | AI necessity                                  |
 |--------|-------------------------------------------------------------------------------------|---------------------------------------------------|
 | 1      | [Ticket and booking system](#71-ticket-and-booking-system)                   | Deliberately AI-free                              |
-| 2      | [Animals and plants sensor data](#72-animals-and-plants-sensor-data)         | Load-bearing                                      |
-| 3      | [Footfall analytics](#73-footfall-analytics)                                 | Load-bearing, classical ML rather than generative |
+| 2      | [Animals and plants sensor data](#72-animals-and-plants-sensor-data)         | Enhancement (rules raise concerns; AI assists)    |
+| 3      | [Footfall analytics](#73-footfall-analytics)                                 | Enhancement (rule-based score; classical ML adds forecasts) |
 | 4      | [Feedback collection and assessment](#74-feedback-collection-and-assessment) | Load-bearing                                      |
 | 5      | [Growth and retention](#75-growth-and-retention)                             | Enhancement                                       |
 
@@ -453,7 +454,7 @@ This is a proposed pilot, not a demonstrated counting capability. Hardware suita
 
 Connectivity and AI limits
 
-The Animal application and concern rules run in the cloud. Local observation capture, camera counting and buffering can continue while local connections, power and storage are available. Cloud rule evaluation, AI extraction and evidence summaries pause when their required connections are unavailable. Keeper rounds are a separate care procedure; they do not bound automated alert delay.
+Critical conditions are handled on the estate. Dissolved oxygen, water temperature, pump or flow failure and water level are evaluated by deterministic rules on the zone edge node, which sound a local alarm and page staff with no cloud dependency ([ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md)). The Animal application and its advisory concern rules run in the cloud. Local observation capture, camera counting and buffering can continue while local connections, power and storage are available. Advisory rule evaluation, AI extraction and evidence summaries pause when their required connections are unavailable. Keeper rounds are a separate care procedure; they do not bound automated alert delay.
 
 AI assists with extraction, summaries and the camera-counting pilot. General behavioral monitoring, thermal/acoustic analysis and automated diagnosis are outside the selected design.
 
@@ -480,11 +481,11 @@ The same platform serves the carnivorous collections: substrate moisture, humidi
 
 The most valuable observational instrument on the estate is an experienced keeper who has watched the same animal for years. The keeper application captures a very short structured check per enclosure, seconds rather than minutes, and it works offline because that requirement came straight out of our actor exercise. Every alert is closed with a disposition, and every escalation is closed with a veterinary outcome. That is our label pipeline.
 
-**Risks we are managing.** False positives waste scarce keeper and vet attention, so this capability is tuned precision-first with an explicit alert budget per keeper per day. False negatives mean a missed sick animal, which is why deterministic sensor thresholds remain as a floor beneath the model. Baselines contaminated by legitimate husbandry changes are handled by keeper-logged events that reset or re-window the baseline. Probe drift is handled by redundant probes on critical parameters, where sensor disagreement is itself an alert.
+**Risks we are managing.** False positives waste scarce keeper and vet attention, so advisory concerns are tuned precision-first with an explicit alert budget per keeper per day. Critical alarms are exempt from any budget ([ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md)). False negatives mean a missed sick animal, which is why critical conditions are handled by deterministic alarms on the estate and keeper observations remain first-class evidence. Probe drift is handled by redundant probes on critical parameters, where sensor disagreement is itself an alert.
 
 ### 7.3 Footfall analytics
 
-**AI necessity: load-bearing, but as classical machine learning rather than generative AI.** Counting is arithmetic and stays deterministic. AI earns its place at prediction: forecasting demand and wait times, and attributing popularity in a way raw counts cannot.
+**AI necessity: an enhancement, using classical machine learning rather than generative AI.** Counting is arithmetic and stays deterministic, and the primary popularity ranking is a rule-based score ([ADR-001](ADR/adr-001-popularity-scoring-approach.md)). Machine learning adds value at prediction: forecasting demand and wait times, and attributing popularity in a way raw counts cannot.
 
 **Business outcome.** The decision the Countess cannot make today: where to invest capital next year. This use case exists to answer it with evidence rather than intuition — a ranked, versioned popularity dataset that Estate's Staffing Service and capital-planning decisions can both consume, rather than a staffing or investment decision made inside UC3 itself.
 
@@ -498,7 +499,7 @@ Popularity ranking from footfall and dwell time: a deterministic rule-based base
 
 Trend and anomaly forecasting, layered on top: once enough batch-window history exists to train against, a forecasting model and anomaly detector run on the same footfall/dwell data to flag zones trending up or down and unusual drop-offs, annotating the baseline ranking rather than replacing it.
 
-**Verification.** This capability grades its own homework. When a visitor reaches the front of a queue we learn what the true wait was, so every prediction is scored within the hour. Attendance forecasts are scored at close of day. We publish error bands to staff rather than point estimates, so nobody over-trusts a number, and we alert when rolling error breaches a threshold rather than waiting for someone to notice bad advice.
+**Verification.** This capability grades its own homework. Queue-entry and boarding observations (matched counts or taps, with clock alignment and rules for abandonment and priority access) give the measured wait, so every prediction is scored within the hour. Attendance forecasts are scored at close of day. We publish error bands to staff rather than point estimates, so nobody over-trusts a number, and we alert when rolling error breaches a threshold rather than waiting for someone to notice bad advice.
 
 **Risks we are managing.** Data loss and latency on Wi-Fi drops, handled by store-and-forward at the edge. Privacy, handled by counting rather than identifying. Over-trust in forecasts, handled by publishing error bands and by keeping a historical-pattern fallback that is always available.
 
@@ -519,7 +520,7 @@ Trend and anomaly forecasting, layered on top: once enough batch-window history 
 
 ### 7.4 Feedback collection and assessment
 
-**AI necessity: load-bearing.** It is classical machine learning rather than generative AI. Counting is arithmetic and stays deterministic. The baseline popularity ranking is also deterministic — AI earns its place one layer up, at trend and anomaly forecasting once sufficient history exists, attributing popularity in a way raw counts alone cannot.
+**AI necessity: load-bearing.** Free-text feedback has no deterministic parser, so theme and sentiment extraction uses a language model through the AI Gateway in the AI quantum ([ADR-008](ADR/adr-008-ai-quantum-and-gateway.md)). Everything around it stays deterministic: ratings, PII stripping, the submission zone and urgent-safety escalation ([ADR-006](ADR/adr-006-ai-feedback-evaluation-and-reporting.md)).
 
 **Business outcome.** Turn unstructured visitor and staff feedback into a ranked, zone-attributed list of things to fix, closing the loop between what visitors experience and where the estate invests.
 
@@ -529,7 +530,7 @@ Trend and anomaly forecasting, layered on top: once enough batch-window history 
 
 **Collection Channels.** To avoid sampling only the most frustrated visitors, we capture data across multiple touchpoints to build a balanced operational picture. We use context-aware in-app prompts triggered after a visitor leaves a specific zone, alongside on-site kiosks and QR codes placed strategically at the physical exits of the 40 rides and 55 enclosures. Additionally, we rely on automated post-visit follow-up emails sent to the lead booker and manual staff-reported observations to log visitor complaints directly.
 
-**Assessment Pipeline.** Raw text flows through an asynchronous, multi-stage pipeline designed to extract meaning without relying on live synchronous AI calls. First, language detection identifies the input language to route it to the appropriate NLP model. Next, sentiment and theme extraction classifies the emotion, such as frustration or delight, along with the operational category, like cleanliness, queue length, or safety. The system then performs zone attribution to map the feedback to a specific area of the estate, such as the jumping piranha tank. Finally, a severity ranking flags safety- or welfare-related keywords for immediate escalation before routing the structured ticket to the relevant zone manager or veterinary staff.
+**Assessment Pipeline.** Raw text flows through an asynchronous, multi-stage pipeline designed to extract meaning without relying on live synchronous AI calls. First, language detection identifies the input language to route it to the appropriate NLP model. Next, sentiment and theme extraction classifies the emotion, such as frustration or delight, along with the operational category, like cleanliness, queue length, or safety. Each item carries two zone fields: where it was submitted, and the zone it is about (confirmed by the visitor, since a complaint at the aquarium exit may be about an earlier ride). Finally, the structured item is routed to the relevant zone manager or veterinary staff. Urgent safety or welfare reports do not wait for this pipeline: keyword rules and a visitor "this is urgent" option send them straight to zone staff at collection time.
 
 **Guardrails and Degradation.** Because this system handles unstructured human input, it requires a strict defensive architecture. As a Tier C capability, all personally identifiable information (PII) is deterministically stripped at the edge before any model call is made, ensuring no free text is ever sent to an external provider without redaction. Furthermore, because the feedback evaluator is not operationally critical, it is designed for graceful degradation. If the external AI provider experiences an outage, raw feedback is simply buffered locally on the edge nodes or in the message broker. This ensures collection continues seamlessly, and processing resumes once the provider is restored.
 
@@ -586,7 +587,7 @@ Safety originates inside the sensor data use case, but we have pulled it into it
 
 Hardwired sensing with fixed local trip logic. Barrier and gate contacts, water-level float switches, perimeter tripwires and emergency stops, wired to local siren and pager output on the zone edge node. No model, no network, no inference.
 
-We designed this layer first and deliberately made it sufficient, so that every AI claim we make afterwards is additive rather than load-bearing. This is also what makes the estate licensable and insurable.
+We designed this layer first and deliberately made it sufficient, so that every AI claim we make afterwards is additive rather than load-bearing. We do not claim this alone makes the estate licensable or insurable; [ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md) sets out the assurance plan (hazard scenarios, threshold ownership, proof tests, acceptance before a zone opens).
 
 **Fail loud.** A missing heartbeat is an alarm, not silence. Sparkplug B death certificates mean a dead camera or sensor is treated as a potential breach until a human confirms otherwise. The dangerous failure in a safety system is the quiet one, so we engineered quiet out.
 
@@ -600,7 +601,7 @@ Here a missed event is catastrophic and a false alarm is merely costly, so this 
 
 **The public** is protected by barrier integrity monitoring, restricted-zone detection and crowd-density prediction. The crowd measure warns before a zone becomes unpleasant, not only when it becomes dangerous, because the comfort threshold is reached long before the safety threshold and acting early is cheaper.
 
-**The animals** are protected from visitors and from each other by enclosure integrity monitoring, and from environmental failure by the life-support monitoring described in use case 2. A dissolved-oxygen collapse in an aquatic enclosure is classified P0, the same priority lane as a visitor safety incident, because a failed pump can kill a tank within hours. Animals are also protected commercially: paid encounters are welfare-gated, so when an animal's indicators leave its baseline the session does not run, whatever the revenue.
+**The animals** are protected from visitors and from each other by enclosure integrity monitoring, and from environmental failure by the life-support monitoring described in use case 2. A dissolved-oxygen collapse in an aquatic enclosure is classified P0, the same priority lane as a visitor safety incident, because a failed pump can kill a tank within hours. Animals are also protected commercially: paid encounters are welfare-gated, so when a welfare concern is open on an animal its encounter is paused automatically, and only a person can resume it ([ADR-010](ADR/adr-010-ai-authority-by-risk.md)), whatever the revenue.
 
 **The plants** are protected by glasshouse environmental monitoring, and the carnivorous collection specifically by irrigation and substrate-moisture monitoring. Plant failure is slow rather than sudden, so it is caught by drift detection against each bench's own normal rather than by threshold alarms.
 
@@ -653,7 +654,7 @@ The ingestion part is scoped for the future.
 The Notification quantum carries both incident alerting and reporting. The design points that matter:
 
 - **Severity tiering** determines routing and channel, so a dissolved-oxygen collapse and a maintenance reminder do not arrive the same way
-- **Alert budgets per role per day** bound alert fatigue by design rather than by hope, and are visible on the dashboard
+- **Alert budgets per role per day** bound alert fatigue for advisory alerts by design rather than by hope, and are visible on the dashboard. Critical alarms are never budgeted
 - **Every alert is closed with a disposition**, which is how the notification path feeds the Ground Truth Ledger
 - **Safety-critical notification runs at the edge** and does not depend on the central platform being reachable
 
@@ -665,7 +666,7 @@ Described in full in [section 10](#10-the-admin-dashboard--the-steward). It also
 
 ### 9.4 The AI Gateway and model tiering
 
-One mechanism answers all three of the brief's AI-uncertainty questions. See [section 11](#11-dealing-with-uncertainty-in-ai).
+One mechanism answers all three of the brief's AI-uncertainty questions. See [section 11](#11-dealing-with-uncertainty-in-ai) and [ADR-008](ADR/adr-008-ai-quantum-and-gateway.md).
 
 ### 9.5 The Ground Truth Ledger
 
@@ -714,8 +715,8 @@ The brief raises this twice, so we treated it as a first-class architectural req
 
 | Tier | Covers                                                   | Hosting rule                                                                 | If that provider disappears tonight                      |
 |----------|--------------------------------------------------------------|----------------------------------------------------------------------------------|--------------------------------------------------------------|
-| A        | Safety computer vision, welfare computer vision              | Self-hosted, version-pinned, open weights. No external provider, ever            | No impact. We were never exposed                             |
-| B        | Forecasting, recommender                                     | Self-hosted or provider, but a deterministic or historical fallback is mandatory | Falls back to rules or history, swap within a day, no outage |
+| A        | Safety camera detection, piranha counting (edge vision)      | Self-hosted, version-pinned, open weights. No external provider, ever            | No impact. We were never exposed                             |
+| B        | Forecasting and anomaly detection, recommender               | Self-hosted, but a deterministic or historical fallback is mandatory             | Falls back to rules or history, swap within a day, no outage |
 | C        | Feedback assessment, visitor assistant, operations summaries | Provider acceptable, graceful degradation required                               | Feature degrades or pauses. Nothing critical is lost         |
 
 The load-bearing point is that nothing which keeps a person or an animal safe depends on a commercial API. That is a deliberate architectural constraint rather than a preference, and it is what allows us to adopt fast-moving models elsewhere without taking on existential risk.
@@ -726,7 +727,7 @@ Estate data and labels live in our lakehouse, never only in a vendor. We prefer 
 
 ## 12. Does it work? Validation and verification
 
-Deterministic functionality is verified once. Non-deterministic functionality has to be verified continuously, which means verification has to be built as a running system rather than a test phase.
+Deterministic controls need regression and operational verification too. Non-deterministic functionality has to be verified continuously, which means verification has to be built as a running system rather than a test phase.
 
 ### The design choice that makes this affordable
 
@@ -746,7 +747,7 @@ Three of our capabilities therefore generate continuous free labels with no labe
 |---------------------------|-------------------------------------------------|--------------------------------------------------------------------------------|----------------------------------------------------------------------------|
 | Wait-time prediction      | Self-labelling: actual wait at the queue front  | Rolling mean absolute error, error bands published rather than point estimates | Error breach on the rolling window, systematic bias by time of day         |
 | Attendance forecast       | Self-labelling: gate count at close of day      | Error against a naive seasonal baseline                                        | Fails to beat baseline, residual drift across weeks                        |
-| Welfare anomaly           | Keeper disposition plus veterinary outcome      | Precision-first, explicit alert budget                                         | Precision decay, disposition mix shifting toward false, alert volume spike |
+| Keeper-note extraction    | Keeper corrections to suggested fields          | Human confirms before entry (L2, ADR-010)                                      | Correction rate rising, fields left blank more often                       |
 | Piranha population count  | Weekly manual spot-count                        | Interval width and calibration drift, never a point estimate                   | Interval widening, divergence from manual audit, implausible trend break   |
 | Safety breach and density | Staged drills, shadow mode, synthetic injection | Recall-first                                                                   | Drill recall drop, confidence collapse, image-quality self-check faults    |
 | Feedback assessment       | Periodic human-coded sample                     | Agreement rate                                                                 | Agreement decay, theme drift                                               |
@@ -784,7 +785,7 @@ Labour rostered to forecast rather than guesswork, which is typically the larges
 
 ### Commercial guardrails we committed to
 
-- Paid animal experiences are welfare-gated. When an animal is outside its baseline the session does not run, whatever the revenue
+- Paid animal experiences are welfare-gated. When a welfare concern is open on an animal its session is paused automatically and only a person can resume it, whatever the revenue
 - Capacity ceilings are set by safety and welfare limits, never by demand. Revenue targets can never raise a capacity ceiling. This ordering is deliberate and non-negotiable
 - Visitor satisfaction and repeat rate are watched as guardrail metrics alongside revenue. Revenue growth that moves either the wrong way is not success
 
@@ -800,7 +801,7 @@ Labour rostered to forecast rather than guesswork, which is typically the larges
 | Year 1      | ~8,000               | ~4,500                      | ~150                   | ~275               | 15 to 30 messages per second |
 | Year 3      | 15,000               | ~7,000                      | ~180                   | ~320               | 20 to 40 messages per second |
 
-**Safe capacity ceiling: 7,500 concurrent visitors on the estate.** This is a safety and welfare limit set by evacuation capacity, crowd density and animal stress. It is not a commercial target, and the capacity leasing described in use case 1 enforces it. Revenue planning works within this number and can never raise it.
+**Safe capacity ceiling: 7,500 concurrent visitors on the estate.** This is a safety and welfare limit set by evacuation capacity, crowd density and animal stress. It is not a commercial target, and capacity leases at the gates enforce it even when the network is down ([ADR-007](ADR/adr-007-ticketing-system.md)). Revenue planning works within this number and can never raise it.
 
 **An architectural property worth stating.** Telemetry volume scales with the number of zones and sensors, not with the number of visitors. Tripling visitors does not triple our data volume, which is why the year-three event rate is barely different from launch. This was a deliberate design choice rather than a happy accident, and it is the reason we are comfortable committing to threefold growth without re-architecture.
 
@@ -821,9 +822,9 @@ This is deliberately modest, because the design pushes intelligence into softwar
 
 | Component           | Target             | Reasoning                                                                                                                                                         |
 |-------------------------|------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Safety alerting, local  | Effectively continuous | Runs at the edge with no network dependency. Availability here is a property of the local node rather than of a central service, which is exactly why we put it there |
+| Critical alarms, local  | Set at hardware selection | Runs on the zone edge node with no network dependency. Availability is a property of the local node, protected by UPS, watchdog and peer monitoring, with operating restrictions when a node is down ([ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md)) |
 | Ticketing and entry     | 99.9%                  | Revenue path, but it degrades to offline cryptographic validation rather than failing, so central availability matters less than it first appears                     |
-| Welfare monitoring      | 99.5%                  | Tolerates minutes of delay. Deterministic sensor thresholds remain beneath it                                                                                         |
+| Advisory welfare concerns | 99.5%                | Tolerates minutes of delay. Critical conditions are handled by local alarms, not this path                                                                            |
 | Analytics and reporting | 99%                    | Tolerates hours of delay by design. This is the P2 lane                                                                                                               |
 
 **Where we think higher would be wasteful.** Five nines across the platform would be the wrong investment for this estate. It is not a financial or public-safety system in the sense that phrase usually implies, it is open roughly nine hours a day, and the genuinely life-critical path has been deliberately moved to the edge where central availability is irrelevant to it. Chasing four or five nines on analytics would cost real money to protect a workload designed to tolerate hours of lag. We would rather spend that budget on the deterministic safety layer and on sensor redundancy in the highest-value enclosures.
@@ -833,24 +834,25 @@ This is deliberately modest, because the design pushes intelligence into softwar
 | Risk                                                    | Severity | Mitigation designed in                                                                                                                      |
 |-------------------------------------------------------------|--------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
 | Safety event missed by the AI layer                         | Critical     | Deterministic Layer 1 is sufficient alone. AI tuned for recall. Drills and shadow mode before the layer is trusted                              |
-| Extended network outage during a peak day                   | High         | Edge autonomy for ticketing, counting, welfare and safety. Capacity leases. Prioritized replay. Chaos-tested against a four-hour target         |
+| Extended network outage during a peak day                   | High         | Edge autonomy for admission, counting and critical alarms. Capacity leases. Prioritized replay. Four-hour chaos test specified for staging         |
 | Alert fatigue erodes response quality                       | High         | Alert budgets per role, severity tiering, precision-first welfare posture, disposition capture to detect degradation early                      |
 | Model provider price rise, deprecation or shutdown          | Medium       | Gateway abstraction. Criticality tiering keeps safety off providers entirely. Weekly second-provider contract tests. Budget caps                |
 | Model quality drift after deployment                        | High         | CI eval gate, shadow and canary with automatic rollback, production drift monitors, golden sets that grow from human dispositions               |
 | Sensor fleet degradation such as dirty lenses or dead nodes | Medium       | Sparkplug B birth and death certificates, heartbeat monitoring, fail loud on silence, maintenance dispatch workflow                             |
 | Historical records corrupted during ingestion               | High         | Confidence-scored extraction, human review of low-confidence fields, source scan retained as the auditable truth                                |
-| Privacy or child-safeguarding incident                      | Critical     | No biometrics by design and enforced in CI. Frames stay at the edge. Consent held separately from entitlements                                  |
+| Privacy or child-safeguarding incident                      | Critical     | No biometrics by design, with a CI scan planned. Frames stay at the edge. Consent held separately from entitlements                            |
 | Over-reliance on AI by staff                                | Medium       | Error bands rather than point estimates. Explicit human authority on safety and veterinary escalation. AI framed as advisory in every interface |
 | Premium experiences stress the collection                   | High         | Welfare-gated bookings. Welfare data is an operational control, not just a dashboard                                                            |
 | Growth outruns safety capacity                              | Critical     | Capacity leases set by safety and welfare limits, never by demand                                                                               |
+| Edge node failure silences critical alarms                  | High         | UPS, hardware watchdog, peer heartbeat monitoring and operating restrictions until restored (ADR-009)                                           |
 | Platform becomes a coordination bottleneck                  | Medium       | Quanta with clear ownership. Domain modules own their sensors, models and thresholds. Safety alerting runs without the central platform         |
 
 ## 16. Roadmap
 
 | Phase | Horizon | Scope                                                                                                                                                                                                                                                       | Why here                                                                                                               |
 |-----------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
-| Phase 1   | Q1 to Q2    | Platform backbone and edge nodes, offline ticketing, footfall analytics, sensor-based welfare, the safety chain, feedback assessment, growth Stage A to B, ingestion of historical records, alerts and notification, the AI Gateway and the Ground Truth Ledger | Everything the estate cannot open safely or profitably without                                                             |
-| Phase 2   | Q3          | Predictive ride maintenance, staff operations copilot, recommender Stage C                                                                                                                                                                                      | Reuse the Phase 1 sensor and edge backbone. Low marginal cost fast-follows                                                 |
+| Phase 1   | Q1 to Q2    | Platform backbone and edge nodes, offline ticketing, footfall analytics, sensor-based welfare, the safety chain, feedback assessment, growth Stage A to B, critical alarms at the edge, the AI quantum and the Ground Truth Ledger | Everything the estate cannot open safely or profitably without                                                             |
+| Phase 2   | Q3          | Ingestion of historical paper records, full notification service, predictive ride maintenance, staff operations copilot, recommender Stage C                                                                                                                                                                                      | Reuse the Phase 1 sensor and edge backbone. Low marginal cost fast-follows                                                 |
 | Phase 3   | Q4 onward   | Conversational visitor assistant, full yield-managed pricing, accommodation pilot                                                                                                                                                                               | Genuinely new surfaces with higher risk and optics sensitivity. Sequenced once the core is proven and data has accumulated |
 
 **Sequencing principle.** Phase 1 deliberately includes the AI Gateway and the Ledger even though neither delivers a visible feature. Building the governance before the second and third AI capabilities is what makes Phases 2 and 3 cheap and safe, rather than a growing pile of ungoverned model calls.
@@ -864,14 +866,14 @@ Being explicit about what we rejected matters as much as what we built.
 | We did not                                          | Because                                                                                                                                                                                                                                                     |
 |---------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Put AI in the ticketing path                            | Ticketing is a correctness and availability problem. Cryptography and capacity leases solve it better, and generative AI stays entirely out of the payment path                                                                                                 |
-| Build an illness classifier                             | Illness is rare and species diverse. We would never have the labelled data. Baseline deviation works from day one and generalises across 55 enclosures                                                                                                          |
+| Build an illness classifier                             | Illness is rare and species diverse. We would never have the labelled data. Configured thresholds, critical alarms and keeper observations work from day one across 55 enclosures                                                                                                          |
 | Let AI actuate anything safety-critical                 | No automated lockdown, gate closure, evacuation or all-clear. AI compresses the human's decision time, it never takes the decision                                                                                                                              |
 | Report a single piranha count                           | A confidence interval is the honest answer. False precision in a population figure is worse than admitting uncertainty                                                                                                                                          |
 | Make a chatbot the centrepiece                          | It is the obvious move and judges have seen it many times. It sits in Phase 3 as an interface over data the platform already produces                                                                                                                           |
 | Adopt an agentic architecture for the core workflows    | Our workflows are structured and low error tolerance. Agents add probabilistic behaviour, cost and latency where deterministic orchestration is more reliable. We would revisit this for analytics and content generation, where the cost of being wrong is low |
 | Depend on a commercial API for anything safety-critical | Tier A is self-hosted and version-pinned. A provider disappearing must never be a safety event                                                                                                                                                                  |
 | Interpolate missing data                                | Gaps are recorded as gaps. No model is trained on invented data and no dashboard implies certainty we did not have                                                                                                                                              |
-| Use facial recognition anywhere                         | We count people, we do not identify them. Enforced by a static scan in CI, not only by policy                                                                                                                                                                   |
+| Use facial recognition anywhere                         | We count people, we do not identify them. A static CI scan for face-recognition libraries is planned, so this is checked rather than only stated                                                                                                                                                                   |
 
 ## 18. 3 Key learnings
 
@@ -889,9 +891,12 @@ All ADRs live in [ADR/](ADR/) and follow the standard format: title, status, con
 | [adr-002-idempotent-footfall-reconciliation](ADR/adr-002-idempotent-footfall-reconciliation.md) | Idempotent reconciliation strategy for zone footfall counts                                                                                                                                                                                                                                                                                                                                                                                                                               | Accepted   |
 | [adr-003-model-monitoring-and-drift](ADR/adr-003-model-monitoring-and-drift.md)                 | Model monitoring and drift handling for popularity forecasting                                                                                                                                                                                                                                                                                                                                                                                                                            | Accepted   |
 | [adr-004-record-durability-and-sync](ADR/adr-004-record-durability-and-sync.md)                 | Record Durability and Syncing for monitoring enclosure conditions                                                                                                                                                                                                                                                                                                                                                                                                                            | Accepted   |
-| [adr-005-deployment-topology](ADR/adr-005-deployment-topology.md)                 | Deployment Topology for animal sensing data                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Accepted   |
-| [AI Feedback Evaluation And Reporting](ADR/adr-006-ai-feedback-evaluation-and-reporting.md)     | We will implement the feedback and reporting pipeline as a Single Unified Architecture Quantum. While components are physically distributed between the Edge and the Cloud, they form a single, highly cohesive bounded context dedicated to generating actionable visitor insights.                                                                                                                                                                                                      | Accepted   |
-| [adr-007-ticketing-system](ADR/adr-007-ticketing-system.md)                                     | Four core services with clear aggregate ownership: User, Ticket, Payment and Visit. Ticket Service owns ticket/family-pass entitlement and capacity rules; Payment Service owns payment transactions; Visit Service owns visits and check-ins. Gate Validator enforces validity, area entitlement and redemption rules, supports offline entry validation, and syncs entry events when connectivity is restored. Wristbands represent access entitlement but are not the source of truth. | Accepted   |
+| [adr-005-deployment-topology](ADR/adr-005-deployment-topology.md) | Cloud-primary deployment; admission, critical alarms (ADR-009), telemetry buffering and approved edge AI run on the estate; placement rule device / estate edge / cloud | Accepted (amended) |
+| [AI Feedback Evaluation And Reporting](ADR/adr-006-ai-feedback-evaluation-and-reporting.md) | Asynchronous feedback pipeline: edge collection with PII stripping, AI evaluation through the AI Gateway (in the AI quantum, ADR-008), deterministic reporting that never calls a model, and a separate urgent-safety path | Accepted (amended) |
+| [adr-007-ticketing-system](ADR/adr-007-ticketing-system.md) | Four core services with clear aggregate ownership: User, Ticket, Payment and Visit. Gate Validator enforces validity, area entitlement and redemption, supports offline entry, and stays within the safe capacity ceiling through capacity leases | Accepted (amended) |
+| [adr-008-ai-quantum-and-gateway](ADR/adr-008-ai-quantum-and-gateway.md) | Start with one AI quantum containing the AI Gateway, AI evaluators and model lifecycle; self-hosted models (edge vision, forecasting) are governed by it but run where they are used; explicit triggers for splitting it later | Accepted |
+| [adr-009-critical-alarms-at-the-edge](ADR/adr-009-critical-alarms-at-the-edge.md) | Critical alarms are decided by deterministic rules on the zone edge node, never in the cloud; UPS, watchdog and peer monitoring, with operating restrictions when a control is down | Accepted |
+| [adr-010-ai-authority-by-risk](ADR/adr-010-ai-authority-by-risk.md) | AI authority levels (L0–L3) set by harm, reversibility and measured performance; automate toward safety, require a human to relax it | Accepted |
 
 ## Diagram index
 
@@ -907,6 +912,12 @@ All ADRs live in [ADR/](ADR/) and follow the standard format: title, status, con
 | 8          | Animal Monitoring C2                        | Architecture                 | assets/Animal_Monitoring_C2.png             |
 | 9          | Feedback Evaluation Reporting               | Architecture                 | assets/Feedback_Evaluation_Reporting_C2.png |
 | 10         | Zone Popularity                             | Architecture                 | assets/Zone_Popularity_C2.png               |
+| 11         | Ticketing                                   | Architecture                 | assets/Ticketing_C2.png                     |
+| 12         | Ticketing flow                              | Flow                         | flow-diagrams/Ticketing_flow.png            |
+| 13         | Care taker observation flow                 | Flow                         | flow-diagrams/Care_Taker_Observation_flow.png |
+| 14         | Animal alert review and summary             | Flow                         | flow-diagrams/Animal_Alert_Review_and_Summary.png |
+| 15         | Zone popularity flow                        | Flow                         | flow-diagrams/Zone_Popularity_Flow.png      |
+| 16         | Feedback evaluation and reporting flow      | Flow                         | flow-diagrams/Feedback_Evaluation_Reporting_Flow.png |
 
 ## Actors
 
@@ -936,13 +947,13 @@ Identified through the actor-action and event storming exercise in section 2.
 
 | Criterion                                                           | Where and how                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 |-------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Innovative use of AI                                                    | Behavioural baseline deviation instead of an infeasible illness classifier (7.2). A deterministic footfall-and-dwell-time popularity baseline, with trend and anomaly forecasting layered on once sufficient history exists . (7.3). A wait-aware itinerary that serves experience, load smoothing and safety at once (7.5). AI used to compress human decision time rather than replace human authority (8). Historical paper records recovered into structured data (9.1) |
+| Innovative use of AI                                                    | Configured thresholds, local critical alarms and keeper observations instead of an infeasible illness classifier (7.2, ADR-009). A deterministic footfall-and-dwell-time popularity baseline, with trend and anomaly forecasting layered on once sufficient history exists . (7.3). A wait-aware itinerary that serves experience, load smoothing and safety at once (7.5). AI used to compress human decision time rather than replace human authority (8). Historical paper records recovered into structured data, planned for Phase 2 (9.1) |
 | Suitability given the constraints                                       | Offline-first edge architecture and P0, P1, P2 priority lanes answer patchy Wi-Fi (4). MQTT with Sparkplug B honours the hardware budget while adding device liveness. Edge aggregation makes the uplink budget viable. Telemetry scales with zones rather than visitors (14)                                                                                                                                                                                                                                                                                                  |
-| Appropriate level of detail                                             | Concrete mechanisms rather than labels: signed entitlement tokens and capacity leases, birth and death certificates, named model families per capability, named metrics and postures, an indicative hardware footprint with quantities                                                                                                                                                                                                                                                                                                                                         |
+| Appropriate level of detail                                             | Concrete mechanisms rather than labels: signed entitlement tokens and capacity leases (ADR-007), birth and death certificates, model tiers per capability (ADR-008), named metrics and postures, an indicative hardware footprint with quantities                                                                                                                                                                                                                                                                                                                                         |
 | Dealing with uncertainty in AI technology                               | A single AI Gateway with capability-to-model binding and fallback chains, criticality tiering that keeps all safety-critical models self-hosted, weekly second-provider contract tests, budget caps with price-change alerting, versioned prompts and retained training data (11)                                                                                                                                                                                                                                                                                              |
-| Do the characteristics of the additions match the existing architecture | Named architectural characteristics with automated fitness functions, including offline tolerance, safety latency, provider portability and verifiability. AI features fail a build if they breach them, exactly as a functional regression would (6). Quanta carry their own characteristics rather than one set being forced across the estate (5)                                                                                                                                                                                                                           |
+| Do the characteristics of the additions match the existing architecture | Named architectural characteristics, each with a fitness function and the ADR it enforces, including offline tolerance, safety latency, provider portability and verifiability. Each is marked as specified or planned rather than claimed (6). Quanta carry their own characteristics rather than one set being forced across the estate (5)                                                                                                                                                                                                                           |
 | Validation and verification of AI results                               | The Ground Truth Ledger as a running system: golden sets, CI eval gate, shadow and canary with automatic rollback, production drift and silent-failure monitors, human disposition capture. Per-capability ground truth sources and misbehaviour signals. A deliberate preference for self-labelling capabilities (12)                                                                                                                                                                                                                                                         |
 | Business outcomes and value                                             | Every use case states the outcome it exists to produce. Assumptions are stated explicitly rather than implied (3).A deterministic footfall-and-dwell-time popularity baseline, with trend and anomaly forecasting layered on once sufficient history exists. Zone-level P&L makes contribution visible per part of the estate (13)                                                                                                                                                                                                                                             |
-| Risk evaluation                                                         | A twelve-item risk register with severity and the mitigation built into the design (15), plus explicit failure and degraded modes for every AI capability and a stated position on what we deliberately did not do (17)                                                                                                                                                                                                                                                                                                                                                        |
+| Risk evaluation                                                         | A thirteen-item risk register with severity and the mitigation built into the design (15), plus explicit failure and degraded modes for every AI capability and a stated position on what we deliberately did not do (17)                                                                                                                                                                                                                                                                                                                                                        |
 
 **Team Ground Truth** — O'Reilly Architectural Katas 2026

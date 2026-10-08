@@ -55,3 +55,15 @@ Any record that needs a decision during disconnection needs a local decision poi
 1. **Send every record straight to the cloud and accept loss during outages.** Simplest infrastructure. Rejected: the brief states Wi-Fi is patchy, so loss would be routine rather than exceptional, and lost animal observations or admissions cannot be reconstructed from paperwork.
 2. **Invest in coverage so devices stay connected.** Worth doing at gates and cameras regardless, but coverage improvement makes outages rarer, not absent. Kept as a complement, not a substitute.
 3. **Rely on the transport's own delivery guarantee as confirmation.** Rejected: delivery to a broker is not the same as the business record being durably processed. A broker or downstream service can still fail after acknowledging.
+
+## Enforcement
+
+| Check | What it verifies | Evidence status |
+|---|---|---|
+| `idempotent_replay` (planned, shared with ADR-002) | Resent records never create a second entry. Late records keep their original observation time | Planned |
+| Offline tolerance (staging) | Records captured during an uplink outage reach the cloud without loss after reconnection. Backlog metrics (pending count, oldest unsent age) are reported | Not yet run. Reported as SKIPPED until staging hardware exists |
+
+## Changelog
+
+- 12 September 2026: Accepted.
+- 2026-10-07: Added the Enforcement section. Decision unchanged.

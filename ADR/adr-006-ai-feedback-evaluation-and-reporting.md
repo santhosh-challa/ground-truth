@@ -2,6 +2,7 @@
 
 **Date:** 2026-09-16
 **Status:** Accepted
+**Amended:** 2026-10-07 (see Changelog)
 
 ## Context
 Von Digitalis Estates requires a feedback and reporting system to extract actionable insights from unstructured visitor feedback regarding the 40 historic rides and 55 animal enclosures. 
@@ -19,27 +20,32 @@ Because connectivity across the estate is patchy, feedback collection must suppo
 
 ## Alternatives
 
-### Option 1 — Unified AI Pipeline with Abstraction Gateway (Chosen)
-Treat the entire feedback lifecycle (from edge collection to cloud AI and reporting) as a **Single Unified Architecture Quantum**. It utilizes an internal asynchronous buffer to handle network drops, and a dedicated AI Gateway to own all external LLM interactions, ensuring the system remains highly cohesive.
+### Option 1 — Asynchronous AI pipeline behind an abstraction gateway (Chosen)
+Collect feedback at the edge, buffer it asynchronously to survive network drops, and evaluate it in the cloud through an AI Gateway that owns all external LLM interactions. The AI Evaluator and AI Gateway belong to the shared **AI quantum** ([ADR-008](adr-008-ai-quantum-and-gateway.md)). Feedback collection and deterministic reporting stay outside it, so reporting and PII handling do not ship with AI changes.
 
 ```mermaid
 graph LR
-    subgraph Unified Architecture Quantum [Unified AI Feedback & Analytics Quantum]
-        A[Feedback UI & Sanitizer] -->|Internal Async Buffer| B[AI Evaluator]
-        B <-->|Internal API| C{AI Gateway}
-        E[(Insights DB)]
-        B --> E
-        E --> F[Reporting Engine]
+    subgraph Feedback [Feedback collection - edge + cloud]
+        A[Feedback UI & Sanitizer]
     end
+    subgraph AIQ [AI quantum - ADR-008]
+        B[AI Evaluator]
+        C{AI Gateway}
+        E[(Insights DB)]
+    end
+    subgraph Reporting [Reporting - Notification & Report quantum]
+        F[Reporting Engine]
+    end
+    A -->|Async buffer| B
+    B <-->|Capability call| C
+    B --> E
+    E -->|Read-only view| F
     C <-->|Proxied API| D((External AI Provider))
-    
-    classDef quantum fill:#01546e,stroke:#4fc3f7,stroke-width:2px,color:#fff;
-    class A,B,C,E,F quantum;
 ```
-*The AI Gateway acts as the single source of truth for routing, fallbacks, and cost-tracking, shielding the unified quantum from external volatility.*
+*The AI Gateway is the single place for routing, fallbacks and cost tracking, shielding the rest of the estate from provider volatility.*
 
 ### Option 2 — Direct Synchronous LLM Integration (Rejected)
-The Collection UI synchronously calls the backend, which directly calls the OpenAI/Anthropic API.
+The Collection UI synchronously calls the backend, which directly calls an external LLM provider's API.
 *   **Problem:** Fatal dynamic connascence. If the AI provider is down, the visitor's app crashes.
 *   **Problem:** High vendor lock-in.
 *   **Problem:** PII leakage risk if sanitization fails in the synchronous loop.
@@ -48,9 +54,9 @@ The Collection UI synchronously calls the backend, which directly calls the Open
 
 ## PrOACT (Trade-off Analysis)
 
-| Requirement | Option 1: Unified & Abstracted (Chosen) | Option 2: Direct Sync Integration (Rejected) |
+| Requirement | Option 1: Async & Abstracted (Chosen) | Option 2: Direct Sync Integration (Rejected) |
 | :--- | :--- | :--- |
-| **High Availability (Offline Collection)** | High (Buffered locally inside quantum) | Low (Fails on Wi-Fi/LLM drop) |
+| **High Availability (Offline Collection)** | High (Buffered locally at the edge) | Low (Fails on Wi-Fi/LLM drop) |
 | **AI Change-Resilience (Vendor Swap)** | High (Config change at Gateway) | Low (Requires code rewrite) |
 | **PII Security** | High (Stripped before buffer) | Medium (Risk of direct pass-through) |
 | **Executive Reporting Reliability** | High (Queries structured DB) | Low (Subject to live hallucinations) |
@@ -59,18 +65,18 @@ The Collection UI synchronously calls the backend, which directly calls the Open
 ---
 
 ## Decision
-We will implement the feedback and reporting pipeline as a **Single Unified Architecture Quantum**. While components are physically distributed between the Edge and the Cloud, they form a single, highly cohesive bounded context dedicated to generating actionable visitor insights. 
-
-Within this unified quantum, responsibilities are logically modularized:
+We will implement the feedback pipeline as three modules with clear ownership. *Amended 2026-10-07:* this ADR originally placed all three modules in a single feedback quantum. The AI Evaluation & Gateway module now belongs to the shared AI quantum (ADR-008). Collection and reporting remain feedback-owned modules, and reporting sits with the Notification & Report quantum.
 
 ### 1. Edge Collection Module
 **Responsibilities:**
 *   Ingest raw text and ratings from visitors via mobile or kiosks.
+*   Record two zone fields: **where the feedback was submitted** (from the QR code, kiosk or app location) and **the zone it is about** (asked of the visitor, with the submission zone as the default). A complaint at the aquarium exit may be about a ride visited earlier.
 *   Deterministically strip PII.
+*   Route **urgent safety or welfare reports** (keyword rules plus a visitor "this is urgent" option) straight to zone staff. This path never waits for, or depends on, AI evaluation.
 *   Store payload locally if the estate network drops.
 *   Push sanitized feedback to the internal event broker when connected.
 
-### 2. AI Evaluation & Gateway Module
+### 2. AI Evaluation & Gateway Module (in the AI quantum, ADR-008)
 **Responsibilities:**
 *   Consume feedback events from the internal buffer.
 *   Request sentiment and actionable suggestions via the AI Abstraction Gateway.
@@ -87,17 +93,17 @@ Within this unified quantum, responsibilities are logically modularized:
 ---
 
 ## Execution Flow (AI Evaluation Decision)
-The AI Gateway is responsible for enforcing provider-agnostic rules and fallbacks, ensuring the unified quantum is never broken by an external third party.
+The AI Gateway is responsible for enforcing provider-agnostic rules and fallbacks, ensuring the feedback pipeline is never broken by an external third party.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    box Unified Architecture Quantum
+    box AI quantum (ADR-008)
         participant Eval as AI Evaluation Module
         participant GW as AI Gateway
     end
-    participant LLM1 as Primary Provider (e.g., OpenAI)
-    participant LLM2 as Fallback Provider (e.g., Anthropic)
+    participant LLM1 as Primary Provider
+    participant LLM2 as Fallback Provider
 
     Eval->>GW: Request sentiment & themes
     GW->>LLM1: Attempt prompt via API
@@ -159,3 +165,21 @@ Due to unreliable Wi-Fi across the sprawling estate, the unified quantum uses an
 | **Async buffering means insights aren't instant** | Accept eventual consistency; executive reports are generated batch/hourly, not second-by-second. |
 | **LLMs return malformed JSON disrupting the DB** | AI Gateway enforces strict JSON schema validation before passing data back to the Evaluator. |
 | **Offline caches could fill up storage on Edge devices** | Implement aggressive compression and TTL (Time to Live) on edge caches, alerting maintenance if limits approach. |
+
+---
+
+## Enforcement
+
+| Check | What it verifies | Evidence status |
+|---|---|---|
+| `reporting_never_calls_llm` (planned) | The reporting module has no dependency on the AI Gateway or any provider | Planned |
+| `no_direct_provider_calls` (planned, ADR-008) | Only the AI quantum calls external providers | Planned |
+| Feedback evaluator agreement rate | Agreement with a periodic human-labelled sample (including ambiguous, multilingual and rare urgent cases) stays above threshold | Designed |
+
+## Changelog
+
+- 2026-09-16: Accepted.
+- 2026-10-07: Amended.
+  - The AI Evaluator and AI Gateway moved to the AI quantum (ADR-008); collection and reporting stay outside it.
+  - Added the two zone fields and the separate urgent-safety path.
+  - Added the Enforcement section.

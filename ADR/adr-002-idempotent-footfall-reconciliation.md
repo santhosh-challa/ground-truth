@@ -89,3 +89,15 @@ batch to the Retry / Dead-Letter Handler instead of silently continuing.
   - *Mitigation*: Define a tolerance threshold (e.g. reconciliation fails
     only above a small percentage mismatch) so trivial noise doesn't
     generate constant false alarms, while still catching meaningful gaps.
+
+## Enforcement
+
+| Check | What it verifies | Evidence status |
+|---|---|---|
+| `idempotent_replay` (planned simulation) | Replaying duplicated, retried and late events through the `(device_id, zone_id, window)` upsert leaves counts unchanged; a broken key makes the test fail | Planned |
+| Reconciliation tolerance | Batches outside the mismatch tolerance are routed to the dead-letter handler, never silently passed | Designed |
+
+## Changelog
+
+- 2026-09-15: Accepted.
+- 2026-10-07: Added the Enforcement section. Decision unchanged.
