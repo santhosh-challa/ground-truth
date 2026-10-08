@@ -68,4 +68,5 @@ Critical alarms are not on this scale. They are deterministic rules on the zone 
 - **Human dispositions are recorded with provenance.** People can be wrong, and can be influenced by the AI output they were shown.
 - **Small sets are demonstrators, not assurance.** Zero errors in 30 cases still allows an error rate of up to about 9.5%.
 
-**Evidence status.** Every row in this section is *Designed*. The `authority_matches_risk` check and the Ledger demotion monitor in ADR-010 are planned, not built.
+## Changelog
+- 7 October 2026: Proposed. Responds to judge feedback on risk-based AI strategy and to the architect's point that low-risk decisions may not need a human in the loop.
