@@ -8,7 +8,7 @@ Levels, factors and level-change rules match ADR-010 (Accepted, 7 Oct 2026).
 
 Tiering decides **where a model may run** and what happens if its provider disappears. Authority decides **what each capability is allowed to do** once it runs. Both apply to every capability, and they are recorded separately on purpose: a self-hosted Tier A model can still be advice-only, and a Tier C provider model can act on its own when being wrong is cheap and reversible.
 
-Asking a person to approve everything does not make the estate safer. It spends the scarcest resource on the estate, staff attention, and trains people to click "yes" without reading. So each AI capability gets an explicit authority level, set by what happens when it is wrong ([ADR-010](ADR/adr-010-ai-authority-by-risk.md)).
+Asking a person to approve everything does not make the estate safer. It spends the scarcest resource on the estate, staff attention, and trains people to click "yes" without reading. So each AI capability gets an explicit authority level, set by what happens when it is wrong [ADR-009](adr-009-critical-alarms-at-the-edge.md)
 
 **How authority is set.** Five factors:
 
@@ -33,7 +33,7 @@ The system may tighten on its own, for example by pausing a paid animal encounte
 | **L2 · Human approves** | Suggests. A named person decides |
 | **L3 · Human only; AI advises** | AI may frame evidence. It never proposes the action |
 
-Critical alarms are not on this scale. They are deterministic rules on the zone edge node ([ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md)), and every lockdown, evacuation, gate closure and all-clear is L3.
+Critical alarms are not on this scale. They are deterministic rules on the zone edge node [ADR-009](adr-009-critical-alarms-at-the-edge.md), and every lockdown, evacuation, gate closure and all-clear is L3.
 
 #### Risk and authority table
 
@@ -52,7 +52,7 @@ Critical alarms are not on this scale. They are deterministic rules on the zone 
 | "You spoke, we acted" and marketing emails | A privacy breach or reputational harm | **L2.** A named person approves each send | Consent held separately from entitlements. Contact details never enter model requests | Not sent |
 | Attendance forecast → rostering (Tier B) | Queues and crowding, or wasted labour cost | **L1** for a ±1 staffing nudge within budget. **L2** for anything larger | Roster floor rules. Safety roles staffed to the upper forecast band. Must beat the seasonal baseline | Seasonal plan |
 | Wait-time display and itinerary suggestions (Tier B) | Frustrated visitors, or herding them into a crowded zone | **L0.** Wait times shown as a range; suggestions within density caps | The safety layer's density cap is a hard constraint. Share cap per attraction. Held-out control group | Rule-based itinerary (Stage A); historical wait times |
-| Popularity trends and anomalies (Tier B) | A wrong investment decision | **L0** for the annotation. **L2** for capital investment and pricing; the Countess decides | The rule score stays primary. Trends suppressed on drift ([ADR-003](ADR/adr-003-model-monitoring-and-drift.md)) | Rule score alone |
+| Popularity trends and anomalies (Tier B) | A wrong investment decision | **L0** for the annotation. **L2** for capital investment and pricing; the Countess decides | The rule score stays primary. Trends suppressed on drift [ADR-009](adr-009-critical-alarms-at-the-edge.md) | Rule score alone |
 
 #### How a level changes
 
