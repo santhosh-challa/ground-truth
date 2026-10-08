@@ -37,6 +37,7 @@ graph LR
         F[Reporting Engine]
     end
     A -->|Async buffer| B
+    A -->|Urgent safety or welfare report, never waits for AI| G[Zone staff]
     B <-->|Capability call| C
     B --> E
     E -->|Read-only view| F
@@ -121,7 +122,7 @@ sequenceDiagram
 
 ## Offline & Failure Handling
 
-Due to unreliable Wi-Fi across the sprawling estate, the unified quantum uses an internal buffer to prevent data loss.
+Due to unreliable Wi-Fi across the sprawling estate, the Edge Collection module uses an internal buffer to prevent data loss. Urgent safety or welfare reports take a separate path straight to zone staff and never wait for the buffer or for AI evaluation.
 
 **Connected State:**
 `Submit Feedback` → `PII Strip` → `Push to Internal Broker` → `Cloud AI Evaluation`
@@ -136,7 +137,8 @@ Due to unreliable Wi-Fi across the sprawling estate, the unified quantum uses an
 
 | Sub-Domain | Responsible Module | Data Store |
 | :--- | :--- | :--- |
-| **Raw Feedback** | Edge Collection | Local Edge SQLite Cache |
+| **Raw Feedback** | Edge Collection | Not persisted. Held in memory only until PII is stripped |
+| **Sanitized Payload (offline)** | Edge Collection | Local Edge SQLite Cache |
 | **Sanitized Payload** | Message Broker | Internal MQTT / Kafka Log |
 | **AI Insights/Sentiment** | AI Evaluation | Insights DB (PostgreSQL) |
 | **Report Definitions** | Reporting | Insights DB (Read-Only) |
@@ -183,3 +185,4 @@ Due to unreliable Wi-Fi across the sprawling estate, the unified quantum uses an
   - The AI Evaluator and AI Gateway moved to the AI quantum (ADR-008); collection and reporting stay outside it.
   - Added the two zone fields and the separate urgent-safety path.
   - Added the Enforcement section.
+- 2026-10-08: Data Ownership corrected to match the offline flow: raw feedback is never persisted, and only sanitized payloads go to the Local Edge SQLite Cache. Offline handling no longer refers to the replaced unified quantum, and the Option 1 diagram now shows the urgent-report path. Decision unchanged.
