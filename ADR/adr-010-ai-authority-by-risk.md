@@ -1,8 +1,9 @@
-### ADR-010: AI authority is set by risk and measured performance, not by default human approval
+# ADR-010: AI authority is set by risk and measured performance, not by default human approval
 
-*Status:** Accepted
+**Status:** Accepted
 
 **Date:** 7 October 2026
+
 
 ## Context
 
