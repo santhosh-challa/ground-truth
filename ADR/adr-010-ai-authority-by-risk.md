@@ -1,10 +1,10 @@
-<!--
-DRAFT for README section 11, to sit after "Model tiering by criticality" and before "Portability commitments".
-Owner: Mohammad Faizan Haidery (T16). Reviewer: ____
-Levels, factors and level-change rules match ADR-010 (Accepted, 7 Oct 2026).
--->
+### ADR-010: AI authority is set by risk and measured performance, not by default human approval
 
-### AI authority by risk
+*Status:** Accepted
+
+**Date:** 7 October 2026
+
+## Context
 
 Tiering decides **where a model may run** and what happens if its provider disappears. Authority decides **what each capability is allowed to do** once it runs. Both apply to every capability, and they are recorded separately on purpose: a self-hosted Tier A model can still be advice-only, and a Tier C provider model can act on its own when being wrong is cheap and reversible.
 
