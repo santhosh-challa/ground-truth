@@ -84,6 +84,7 @@ We will implement the feedback pipeline as three modules with clear ownership. *
 *   Manage AI model routing, failovers, and token cost tracking.
 *   Parse non-deterministic JSON responses into structured data.
 *   Persist structured insights to the Insights DB.
+*   Route each item to the zone manager or vet staff for its zone, or raise a small cleaning work order under a cost limit. The Notification Service tells the owner, who can undo it (L1, [ADR-010](adr-010-ai-authority-by-risk.md)).
 
 ### 3. Deterministic Reporting Module
 **Responsibilities:**
@@ -186,3 +187,4 @@ Due to unreliable Wi-Fi across the sprawling estate, the Edge Collection module 
   - Added the two zone fields and the separate urgent-safety path.
   - Added the Enforcement section.
 - 2026-10-08: Data Ownership corrected to match the offline flow: raw feedback is never persisted, and only sanitized payloads go to the Local Edge SQLite Cache. Offline handling no longer refers to the replaced unified quantum, and the Option 1 diagram now shows the urgent-report path. Decision unchanged.
+- 2026-10-09: Routing to zone managers and vet staff (L1, through the Notification Service) added to the AI Evaluation module, to match ADR-010 and the redrawn C2. Decision unchanged.
