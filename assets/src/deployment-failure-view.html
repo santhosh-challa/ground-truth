@@ -2,13 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Deployment and Failure View</title>
+<title>Deployment and Failure Views</title>
 <!--
-  Source for assets/deployment-failure-view.png, in the house style of the other figures.
-  Render (macOS):
+  Source for two figures, in the house style of the other figures:
+    #deployment -> assets/deployment-view.png  (Figure 4)
+    #failure    -> assets/failure-view.png     (Figure 5)
+  Render (macOS), with HEIGHT = document height for that part:
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
-      --force-device-scale-factor=1 --window-size=1900,1920 \
-      --screenshot=assets/deployment-failure-view.png assets/src/deployment-failure-view.html
+      --force-device-scale-factor=1 --window-size=1900,HEIGHT \
+      --screenshot=assets/deployment-view.png "file://$PWD/assets/src/deployment-failure-view.html#deployment"
 -->
 <style>
   :root {
@@ -90,6 +92,9 @@
   .cell.rx i { color: var(--navy); }
   .cell .adr { display: block; margin-top: 5px; font-size: 11.5px; color: var(--navy2); font-weight: 700; letter-spacing: 0.3px; }
 
+  .part + .part { margin-top: 80px; }
+  body.only-deployment .part-failure, body.only-failure .part-deployment { display: none; }
+  body.only-deployment .part + .part, body.only-failure .part + .part { margin-top: 0; }
   .rule-box { margin-top: 28px; border: 2px solid var(--navy2); border-radius: 10px; background: var(--panel); padding: 14px 18px 15px; }
   .rule-box b { font-size: 15.5px; color: var(--navy); }
   .rule-box p { font-size: 13.5px; line-height: 1.5; margin-top: 6px; }
@@ -104,11 +109,12 @@
 </head>
 <body>
 
-<h1>Deployment and Failure View</h1>
-<div class="subtitle">Where each part runs, and what each failure does to it. If it must survive an outage, it runs on the estate; if it can wait, it runs in the cloud.</div>
+<!-- ================= FIGURE 4: DEPLOYMENT VIEW (#deployment) ================= -->
+<section class="part part-deployment">
+<h1>Deployment View</h1>
+<div class="subtitle">Where each part runs. If it must survive an outage, it runs on the estate; if it can wait, it runs in the cloud.</div>
 <hr>
 
-<!-- ============ WHERE IT RUNS ============ -->
 <div class="grid">
   <div></div>
   <div class="bracket estate">On the estate<span>Keeps working when the uplink drops</span></div>
@@ -181,11 +187,42 @@
   <div></div>
 </div>
 
-<!-- ============ WHAT EACH FAILURE DOES ============ -->
-<div class="matrix">
-  <div class="section-title">What each failure does</div>
-  <div class="section-sub">Read across a row. Detection is how we know; the restriction is what staff do until it is fixed.</div>
+<div class="rule-box">
+  <b>Placement rule <span class="n">(ADR-005)</span></b>
+  <p><b style="font-size:13.5px">Device:</b> hardwired reflexes that need no network. <b style="font-size:13.5px">Estate edge:</b> anything that must survive an internet outage, namely admission, critical alarms, telemetry buffering and approved edge AI. <b style="font-size:13.5px">Cloud:</b> anything that can wait, namely records, history, advisory concerns, analytics, model training and evaluation. What happens when each part fails is in the Failure View.</p>
+</div>
 
+<div class="key">
+  <h3>KEY</h3>
+  <div class="key-row">
+    <span><span class="sw" style="border-color:var(--tier)"></span>Device</span>
+    <span><span class="sw" style="border-color:var(--coral);background:var(--coralfill)"></span>Estate edge (works with the uplink down)</span>
+    <span><span class="sw" style="border-color:var(--mint);background:var(--mintfill)"></span>Deterministic safety (never AI)</span>
+    <span><span class="sw" style="border-color:var(--navy2);background:var(--lav)"></span>AI quantum or AI model</span>
+    <span><span class="sw" style="border-color:var(--navy2)"></span>Cloud</span>
+    <span><span class="sw" style="border-color:var(--extline);border-style:dashed;background:var(--extfill)"></span>External supplier</span>
+  </div>
+  <div class="key-row">
+    <span><span class="dash"></span>Internet uplink: everything crossing it is buffered</span>
+    <span><svg class="arr" width="30" height="10" viewBox="0 0 30 10"><line x1="0" y1="5" x2="23" y2="5" stroke="#2b3d76" stroke-width="2"/><path d="M22 0 L30 5 L22 10 z" fill="#2b3d76"/></svg> Sync: request/response</span><span><svg class="arr" width="30" height="10" viewBox="0 0 30 10"><line x1="0" y1="5" x2="23" y2="5" stroke="#2b3d76" stroke-width="2" stroke-dasharray="4 3"/><path d="M22 0 L30 5 L22 10 z" fill="#2b3d76"/></svg> Async: buffered, replayed later</span>
+  </div>
+</div>
+</section>
+
+<!-- ================= FIGURE 5: FAILURE VIEW (#failure) ================= -->
+<section class="part part-failure">
+<h1>Failure View</h1>
+<div class="subtitle">What each failure does in each place, how we detect it, and what staff do until it is fixed. Read across a row.</div>
+<hr>
+
+<div class="grid">
+  <div></div>
+  <div class="bracket estate">On the estate<span>Keeps working when the uplink drops</span></div>
+  <div></div>
+  <div class="bracket off">Off the estate<span>May pause; reports show how old their data is</span></div>
+</div>
+
+<div class="matrix" style="margin-top:6px">
   <div class="grid mhead">
     <div>Failure · detected by</div>
     <div>Device</div>
@@ -257,21 +294,16 @@
   </div>
 </div>
 
+</div>
+
 <div class="rule-box">
   <b>Design rule</b>
   <p>No safety decision depends on the uplink, the cloud or an AI model. The one single point of failure we accept is the zone edge node: it is detected by its neighbour and covered by an operating restriction, and a zone moves to an independent alarm controller or paired nodes if the ADR-009 revisit triggers fire. Evidence status: <b style="font-size:13.5px">Designed.</b> Hardware drills are part of the ADR-009 assurance plan; nothing here is hardware-tested yet.</p>
 </div>
 
+
 <div class="key">
   <h3>KEY</h3>
-  <div class="key-row">
-    <span><span class="sw" style="border-color:var(--tier)"></span>Device</span>
-    <span><span class="sw" style="border-color:var(--coral);background:var(--coralfill)"></span>Estate edge (works with the uplink down)</span>
-    <span><span class="sw" style="border-color:var(--mint);background:var(--mintfill)"></span>Deterministic safety (never AI)</span>
-    <span><span class="sw" style="border-color:var(--navy2);background:var(--lav)"></span>AI quantum or AI model</span>
-    <span><span class="sw" style="border-color:var(--navy2)"></span>Cloud</span>
-    <span><span class="sw" style="border-color:var(--extline);border-style:dashed;background:var(--extfill)"></span>External supplier</span>
-  </div>
   <div class="key-row">
     <span><span class="bar" style="border-left-color:var(--mint)"></span>Continues</span>
     <span><span class="bar" style="border-left-color:var(--amber)"></span>Degrades</span>
@@ -281,9 +313,13 @@
   </div>
   <div class="key-row">
     <span><span class="dash"></span>Internet uplink: everything crossing it is buffered</span>
-    <span><svg class="arr" width="30" height="10" viewBox="0 0 30 10"><line x1="0" y1="5" x2="23" y2="5" stroke="#2b3d76" stroke-width="2"/><path d="M22 0 L30 5 L22 10 z" fill="#2b3d76"/></svg> Sync: request/response</span><span><svg class="arr" width="30" height="10" viewBox="0 0 30 10"><line x1="0" y1="5" x2="23" y2="5" stroke="#2b3d76" stroke-width="2" stroke-dasharray="4 3"/><path d="M22 0 L30 5 L22 10 z" fill="#2b3d76"/></svg> Async: buffered, replayed later</span>
   </div>
 </div>
+</section>
 
+<script>
+  var part = location.hash.slice(1);
+  if (part === 'deployment' || part === 'failure') document.body.classList.add('only-' + part);
+</script>
 </body>
 </html>
