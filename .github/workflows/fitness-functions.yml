@@ -1,86 +1,89 @@
-name: Architecture Fitness Functions
+name: Fitness functions (specified, not yet running)
 
 on:
   push:
     branches:
       - main
-      - feedback_evaluation_reporting
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   offline-tolerance:
-    name: Offline Tolerance
+    name: Offline Tolerance (SKIPPED, needs staging)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Offline Tolerance Fitness Function
-        run: ./engineering-practices/fitness-tests/offline-tolerance.sh
+      - name: Offline Tolerance fitness function (ADR-004, ADR-005, ADR-009)
+        run: bash ./engineering-practices/fitness-tests/offline-tolerance.sh
 
   safety-latency:
-    name: Safety Latency
+    name: Safety Latency (SKIPPED, needs staging)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Safety Latency Fitness Function
-        run: ./engineering-practices/fitness-tests/safety-latency.sh
+      - name: Safety Latency fitness function (ADR-009)
+        run: bash ./engineering-practices/fitness-tests/safety-latency.sh
 
   elasticity:
-    name: Elasticity
+    name: Elasticity (SKIPPED, specified)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Elasticity Fitness Function
-        run: ./engineering-practices/fitness-tests/elasticity.sh
+      - name: Elasticity fitness function (README §6)
+        run: bash ./engineering-practices/fitness-tests/elasticity.sh
 
   provider-portability:
-    name: Provider Portability
+    name: Provider Portability (SKIPPED, planned)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Provider Portability Fitness Function
-        run: ./engineering-practices/fitness-tests/provider-portability.sh
+      - name: Provider Portability fitness function (ADR-008)
+        run: bash ./engineering-practices/fitness-tests/provider-portability.sh
 
   verifiability:
-    name: Verifiability
+    name: Verifiability (SKIPPED, planned)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Verifiability Fitness Function
-        run: ./engineering-practices/fitness-tests/verifiability.sh
+      - name: Verifiability fitness function (ADR-003, ADR-006, ADR-008)
+        run: bash ./engineering-practices/fitness-tests/verifiability.sh
 
   cost-predictability:
-    name: Cost Predictability
+    name: Cost Predictability (SKIPPED, planned)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Cost Predictability Fitness Function
-        run: ./engineering-practices/fitness-tests/cost-predictability.sh
+      - name: Cost Predictability fitness function (ADR-008)
+        run: bash ./engineering-practices/fitness-tests/cost-predictability.sh
 
   privacy:
-    name: Privacy
+    name: Privacy (SKIPPED, planned)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Privacy Fitness Function
-        run: ./engineering-practices/fitness-tests/privacy.sh
+      - name: Privacy fitness function (README §6, §17)
+        run: bash ./engineering-practices/fitness-tests/privacy.sh

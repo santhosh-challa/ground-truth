@@ -1,19 +1,29 @@
-#!/usr/bin/env bash
 
 set -euo pipefail
+
+skip() {
+    local msg="SKIPPED: $1, not yet measured."
+    echo "$msg"
+    if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+        echo "::notice title=Fitness function not yet running::${msg}"
+        if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+            echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+        fi
+    fi
+    exit 0
+}
 
 echo "Running Offline Tolerance Fitness Function..."
 
 # Expected offline operating window
 REQUIRED_OFFLINE_HOURS=4
 
-# Placeholder for the staging chaos test result.
-# This variable will be supplied by the CI/CD pipeline.
-CHAOS_TEST_RESULT="${CHAOS_TEST_RESULT:-pass}"
+# Result of the staging chaos test. It will be supplied by the pipeline
+# once staging hardware exists.
+CHAOS_TEST_RESULT="${CHAOS_TEST_RESULT:-}"
 
-if [[ "$REQUIRED_OFFLINE_HOURS" -lt 4 ]]; then
-    echo "FAIL: Offline tolerance is below the required 4 hours."
-    exit 1
+if [[ -z "$CHAOS_TEST_RESULT" ]]; then
+    skip "Offline tolerance (${REQUIRED_OFFLINE_HOURS} h): specified in ADR-004, ADR-005 and ADR-009, needs staging hardware"
 fi
 
 if [[ "$CHAOS_TEST_RESULT" != "pass" ]]; then
