@@ -43,7 +43,7 @@ If you have five minutes: read this section, then [1 From problem to architectur
 | Architecture decision records         | [ADR/](ADR/) and the [ADR index](#architecture-decision-records)                                                                                         |
 | Brainstorming artifacts               | [other-artifacts/](other-artifacts/)                                                                         |
 | Projected impact and key ideas        | [At a glance](#at-a-glance) |
-| Projected roadmap and impact by year  | [16 Roadmap](#16-roadmap) |
+| Projected roadmap and impact by year  | [16 Roadmap](#roadmap) |
 | How this meets the judging criteria   | [Traceability table](#how-this-submission-addresses-the-judging-criteria)                                           |
 
 ## Contents
