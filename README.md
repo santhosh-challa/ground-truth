@@ -381,13 +381,19 @@ A single queue would mean a backlog of low-value telemetry could delay a safety 
 
 **Design rule:** no P0 decision may depend on the cloud, the Wi-Fi, or a non-deterministic model.
 
-### Figure 4. Deployment and failure view
+### Figure 4. Deployment view
 
-Figure 3 deals with the uplink. This view covers every failure we designed for. The top half shows where each part runs, following the placement rule in [ADR-005](ADR/adr-005-deployment-topology.md): if it must survive an outage, it runs on the estate; if it can wait, it runs in the cloud. Read the bottom half across a row to see what one failure does in each place, how we detect it, and the operating restriction staff follow until it is fixed.
+Figure 3 deals with the uplink. Figures 4 and 5 cover every failure we designed for. Figure 4 shows where each part runs, following the placement rule in [ADR-005](ADR/adr-005-deployment-topology.md): if it must survive an outage, it runs on the estate; if it can wait, it runs in the cloud.
 
-![Deployment and failure view](assets/deployment-failure-view.png)
+![Deployment view](assets/deployment-view.png)
 
-The one single point of failure we accept is the zone edge node. We do not hide it. A neighbouring node detects the failure, staff work under an operating restriction until it is fixed, and [ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md) sets the triggers for moving a zone to an independent alarm controller. The figure is drawn from an editable source, [assets/src/deployment-failure-view.html](assets/src/deployment-failure-view.html), so it can be re-rendered as the design changes.
+### Figure 5. Failure view
+
+The same columns, read across a row: what one failure does in each place, how we detect it, and the operating restriction staff follow until it is fixed.
+
+![Failure view](assets/failure-view.png)
+
+The one single point of failure we accept is the zone edge node. We do not hide it. A neighbouring node detects the failure, staff work under an operating restriction until it is fixed, and [ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md) sets the triggers for moving a zone to an independent alarm controller. Both figures are drawn from one editable source, [assets/src/deployment-failure-view.html](assets/src/deployment-failure-view.html), so they can be re-rendered as the design changes.
 
 ## 5. Architectural quanta
 
@@ -1081,23 +1087,24 @@ In reading order: context and platform (§4), then each use case (§7), safety (
 | 2 | [Figure 1. Estate reference architecture](assets/reference-architecture.png) | Layered container view | [§4](#figure-1-reference-architecture) |
 | 3 | [Figure 2. Platform topology](assets/platform-topology-diagram.png) | Context and topology | [§4](#figure-2-platform-topology) |
 | 4 | [Figure 3. Offline-first data spine and priority lanes](assets/offline-data-spine.png) | Data flow | [§4](#figure-3-offline-first-data-spine-and-priority-lanes) |
-| 5 | [Figure 4. Deployment and failure view](assets/deployment-failure-view.png) | Deployment with failure modes | [§4](#figure-4-deployment-and-failure-view), [ADR-005](ADR/adr-005-deployment-topology.md), [ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md) |
-| 6 | [Ticketing](assets/Ticketing_C2.png) | Container (C2) | [§7.1](#71-ticket-and-booking-system) |
-| 7 | [Ticketing flow](flow-diagrams/Ticketing_flow.png) | Flow | [§7.1](#71-ticket-and-booking-system) |
-| 8 | [Animal sensing stack](assets/Animal-sensing-stack.png) | Component | [§7.2](#72-animals-and-plants-sensor-data) |
-| 9 | [Animal monitoring](assets/Animal_Monitoring_C2.png) | Container (C2) | [§7.2](#72-animals-and-plants-sensor-data) |
-| 10 | [Care taker observation flow](flow-diagrams/Care_Taker_Observation_flow.png) | Sequence | [§7.2](#72-animals-and-plants-sensor-data) |
-| 11 | [Animal alert review and summary](flow-diagrams/Animal_Alert_Review_and_Summary.png) | Flow | [§7.2](#72-animals-and-plants-sensor-data) |
-| 12 | [Zone popularity](assets/Zone_Popularity_C2.png) | Container (C2) | [§7.3](#73-footfall-analytics) |
-| 13 | [Zone popularity flow](flow-diagrams/Zone_Popularity_Flow.png) | Flow | [§7.3](#73-footfall-analytics) |
-| 14 | [Feedback evaluation and reporting](assets/Feedback_Evaluation_Reporting_C2.png) | Container (C2) | [§7.4](#74-feedback-collection-and-assessment) |
-| 15 | [Feedback evaluation and reporting flow](flow-diagrams/Feedback_Evaluation_Reporting_Flow.png) | Flow | [§7.4](#74-feedback-collection-and-assessment) |
-| 16 | [Feedback pipeline modules and AI provider fallback](ADR/adr-006-ai-feedback-evaluation-and-reporting.md) | Component and sequence (Mermaid) | [ADR-006](ADR/adr-006-ai-feedback-evaluation-and-reporting.md) |
-| 17 | [Safety chain, two independent layers](assets/safety-chain.png) | Flow and decision | [§8](#8-safety-of-the-public-the-animals-and-the-plants) |
-| 18 | [AI Gateway and Ground Truth Ledger](assets/ai-gateway-ground-truth-ledger.png) | Component with feedback loop | [§11](#11-dealing-with-uncertainty-in-ai) |
-| 19 | [Profit lever tree](assets/Profit-lever-tree.png) | Business model | [§13](#13-making-the-estate-profitable) |
-| 20 | [Architecture characteristics worksheet](other-artifacts/Architecture%20Characteristics%20Worksheet.png) | Worksheet | [§2.7](#27-characteristics-first-then-ai) |
-| 21 | [Architecture styles worksheet](other-artifacts/Architecture%20Sytles%20Worksheet.png) | Worksheet | [§4](#architecture-style-a-service-based-core-event-driven-at-the-edge) |
+| 5 | [Figure 4. Deployment view](assets/deployment-view.png) | Deployment | [§4](#figure-4-deployment-view), [ADR-005](ADR/adr-005-deployment-topology.md) |
+| 6 | [Figure 5. Failure view](assets/failure-view.png) | Failure modes and operating restrictions | [§4](#figure-5-failure-view), [ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md) |
+| 7 | [Ticketing](assets/Ticketing_C2.png) | Container (C2) | [§7.1](#71-ticket-and-booking-system) |
+| 8 | [Ticketing flow](flow-diagrams/Ticketing_flow.png) | Flow | [§7.1](#71-ticket-and-booking-system) |
+| 9 | [Animal sensing stack](assets/Animal-sensing-stack.png) | Component | [§7.2](#72-animals-and-plants-sensor-data) |
+| 10 | [Animal monitoring](assets/Animal_Monitoring_C2.png) | Container (C2) | [§7.2](#72-animals-and-plants-sensor-data) |
+| 11 | [Care taker observation flow](flow-diagrams/Care_Taker_Observation_flow.png) | Sequence | [§7.2](#72-animals-and-plants-sensor-data) |
+| 12 | [Animal alert review and summary](flow-diagrams/Animal_Alert_Review_and_Summary.png) | Flow | [§7.2](#72-animals-and-plants-sensor-data) |
+| 13 | [Zone popularity](assets/Zone_Popularity_C2.png) | Container (C2) | [§7.3](#73-footfall-analytics) |
+| 14 | [Zone popularity flow](flow-diagrams/Zone_Popularity_Flow.png) | Flow | [§7.3](#73-footfall-analytics) |
+| 15 | [Feedback evaluation and reporting](assets/Feedback_Evaluation_Reporting_C2.png) | Container (C2) | [§7.4](#74-feedback-collection-and-assessment) |
+| 16 | [Feedback evaluation and reporting flow](flow-diagrams/Feedback_Evaluation_Reporting_Flow.png) | Flow | [§7.4](#74-feedback-collection-and-assessment) |
+| 17 | [Feedback pipeline modules and AI provider fallback](ADR/adr-006-ai-feedback-evaluation-and-reporting.md) | Component and sequence (Mermaid) | [ADR-006](ADR/adr-006-ai-feedback-evaluation-and-reporting.md) |
+| 18 | [Safety chain, two independent layers](assets/safety-chain.png) | Flow and decision | [§8](#8-safety-of-the-public-the-animals-and-the-plants) |
+| 19 | [AI Gateway and Ground Truth Ledger](assets/ai-gateway-ground-truth-ledger.png) | Component with feedback loop | [§11](#11-dealing-with-uncertainty-in-ai) |
+| 20 | [Profit lever tree](assets/Profit-lever-tree.png) | Business model | [§13](#13-making-the-estate-profitable) |
+| 21 | [Architecture characteristics worksheet](other-artifacts/Architecture%20Characteristics%20Worksheet.png) | Worksheet | [§2.7](#27-characteristics-first-then-ai) |
+| 22 | [Architecture styles worksheet](other-artifacts/Architecture%20Sytles%20Worksheet.png) | Worksheet | [§4](#architecture-style-a-service-based-core-event-driven-at-the-edge) |
 
 Dashboard screenshots of The Steward are indexed separately in [prototype/screens/](prototype/screens/).
 
