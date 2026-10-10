@@ -43,7 +43,7 @@ If you have five minutes: read this section, then [1 From problem to architectur
 | Architecture decision records         | [ADR/](ADR/) and the [ADR index](#architecture-decision-records)                                                                                         |
 | Brainstorming artifacts               | [other-artifacts/](other-artifacts/)                                                                         |
 | Projected impact and key ideas        | [At a glance](#at-a-glance) |
-| Projected roadmap and impact by year  | [Roadmap](#16_roadmap) |
+| Projected roadmap and impact by year  | [Roadmap](#16-roadmap) |
 | How this meets the judging criteria   | [Traceability table](#how-this-submission-addresses-the-judging-criteria)                                           |
 
 ## Contents
@@ -393,7 +393,7 @@ The same columns, read across a row: what one failure does in each place, how we
 
 ![Failure view](assets/failure-view.png)
 
-The one single point of failure we accept is the zone edge node. We do not hide it. A neighbouring node detects the failure, staff work under an operating restriction until it is fixed, and [ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md) sets the triggers for moving a zone to an independent alarm controller. Both figures are drawn from one editable source, [assets/src/deployment-failure-view.html](assets/src/deployment-failure-view.html), so they can be re-rendered as the design changes.
+The one single point of failure we accept is the zone edge node. We do not hide it. A neighbouring node detects the failure, staff work under an operating restriction until it is fixed, and [ADR-009](ADR/adr-009-critical-alarms-at-the-edge.md) sets the triggers for moving a zone to an independent alarm controller.
 
 ## 5. Architectural quanta
 
