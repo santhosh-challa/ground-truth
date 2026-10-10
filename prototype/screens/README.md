@@ -1,18 +1,25 @@
-# The Steward — dashboard screenshots
+# The Steward — prototype screens
 
-Static screenshots of every screen in [the interactive prototype](../the-steward-dashboard.html), for readers who would rather not open it. Each screen is described in README §10.
+The Steward is the estate's admin dashboard: the Countess's operating picture once the architecture is live. It is a design prototype, not production software, but every number, alert and control on it traces back to a capability or decision in the [main README](../../README.md) and the [ADRs](../../ADR/).
 
-| # | Screen | What it shows |
-|---|---|---|
-| 01 | [Today](01-today.png) | Money first, the queue of decisions waiting on you, and what the system was worth this week |
-| 02 | [Visitors](02-visitors.png) | Gate arrivals against forecast and popular spots ranked by dwell time |
-| 03 | [Collections](03-collections.png) | Welfare board per enclosure: sensor readings and keeper observations side by side |
-| 04 | [Recommendations](04-recommendations.png) | Each AI suggestion with its confidence, a "why is this being suggested" expander and a yes/no disposition for the Ground Truth Ledger |
-| 05 | [Money by zone](05-money-by-zone.png) | Revenue less allocated cost per zone |
-| 06 | [Adventure Park](06-park.png) | Rides operating, predicted waits for the next 30 minutes, and rides needing a decision |
-| 07 | [System health](07-health.png) | Silent sensors as faults, live model scoring, supplier exposure by tier |
-| 08 | [Animal detail](08-animal-detail.png) | One animal's intake against its own baseline, history and the welfare gate |
-| 09 | [Tank detail](09-tank-detail.png) | The jumping piranha colony: a deterministic life-support alarm from the edge node, the count as a range, and oxygen history |
-| 10 | [Operations role](10-role-operations.png) | The dashboard as seen by Operations |
-| 11 | [Keeper role](11-role-keeper.png) | The dashboard as seen by a keeper |
-| 12 | [Degraded mode](12-degraded.png) | The "Simulate AI outage" view: degradation announced, never silent |
+**Open it live:** [santhosh-challa.github.io/ground-truth/prototype/the-steward-dashboard.html](https://santhosh-challa.github.io/ground-truth/prototype/the-steward-dashboard.html), or open [`the-steward-dashboard.html`](../the-steward-dashboard.html) in any browser. There is no build step.
+
+## Screens
+
+| # | Screen | What it shows | Backed by |
+|---|---|---|---|
+| 01 | [Today](01-today.png) | The Countess's end-of-day view. Money comes first: \$73,980 revenue, \$26,560 kept after costs, 2,840 visitors and \$8.45 spent per visitor inside the gate. Then the decisions queue: Tank 12's alarm handled during the outage, Hesper's encounters to decide tomorrow, the Piranha Hall carts done, and Ride 07's inspection. Below that are arrivals against the forecast that set the roster, the value created this week, and where today's money came from. | README ~10, ~13 · [ADR-009](../../ADR/adr-009-critical-alarms-at-the-edge.md) · [ADR-010](../../ADR/adr-010-ai-authority-by-risk.md) |
+| 02 | [Visitors and footfall](02-visitors.png) | Gate arrivals by hour against the day-ahead forecast, with the busiest hour (10 to 11am). Then weekend against weekday, change by week, month and quarter, and the popular spots ranked by dwell time rather than headcount, because a busy corridor is not a popular exhibit. | README ~7.3 · [ADR-001](../../ADR/adr-001-popularity-scoring-approach.md) · [ADR-002](../../ADR/adr-002-idempotent-footfall-reconciliation.md) |
+| 03 | [Animals and aquatics, land](03-collections.png) | The welfare board for land enclosures. Each card shows configured readings and the latest keeper note side by side. Hesper is on alert with her concern open and her encounters paused. The meter shows how much of the keepers' daily budget for advisory alerts has been used. | README ~7.2 · [ADR-004](../../ADR/adr-004-record-durability-and-sync.md) · [ADR-009](../../ADR/adr-009-critical-alarms-at-the-edge.md) |
+| 04 | [Recommendations](04-recommendations.png) | Each AI suggestion with its confidence and what it is worth, a "Why is this being suggested?" panel showing the evidence and model version, and Yes/No verdicts that feed the Ground Truth Ledger. The cart move shows as done, approved by Operations (L2). Hesper's encounters show as paused automatically (L1). | README ~11, ~12 · [ADR-010](../../ADR/adr-010-ai-authority-by-risk.md) |
+| 05 | [Money by zone](05-money-by-zone.png) | Revenue less allocated cost for each zone today, including the Main Aquarium running at a loss. Also the share of revenue from admission (68%, with a target nearer 60%), spend per visitor over 12 weeks, and how time spent in a zone compares with how far it is to somewhere to spend. No AI is involved: this is measurement, not prediction. | README ~3, ~13 |
+| 06 | [Adventure Park](06-park.png) | Ride KPIs, predicted queue waits per ride, and the rides needing a decision: Ride 07's rising vibration, a carousel awaiting a replacement belt, and a ride with spare capacity to promote in the visitor app. | README ~7.3, ~7.5 |
+| 07 | [System health](07-health.png) | Silent sensors, treated as faults rather than calm. Whether each AI capability is still within its threshold, as scored by the Ground Truth Ledger. Supplier exposure by tier, if an AI provider disappeared tonight. | README ~6, ~11, ~12 · [ADR-003](../../ADR/adr-003-model-monitoring-and-drift.md) · [ADR-008](../../ADR/adr-008-ai-quantum-and-gateway.md) |
+| 08 | [Animal record: Hesper](08-animal-detail.png) | Hesper's record at 18:00. It shows the open welfare concern, today's keeper-logged feed (380 g against her usual 1.2 kg), and Ayush's voice note beside the fields AI drafted and what he confirmed (L2). Her history runs from the 07:40 note to Dr Reddy's examination at 11:00. The welfare gate keeps paid encounters paused until a person resumes them. | README ~7.2 · [ADR-004](../../ADR/adr-004-record-durability-and-sync.md) · [ADR-010](../../ADR/adr-010-ai-authority-by-risk.md) |
+| 09 | [Tank record: Tank 12](09-tank-detail.png) | The piranha tank after this morning's alarm. Oxygen fell, the alarm sounded on edge node 4 at 09:12 during the outage with no cloud and no AI, and oxygen was back above threshold by 09:30. The colony count is a range, never a single number, and the record explains why that range widened while the water was cloudy. | README ~7.2, ~8 · [ADR-009](../../ADR/adr-009-critical-alarms-at-the-edge.md) |
+| 10 | [Operations view](10-role-operations.png) | Today as Operations sees it: people still on site against the 7,500 safety ceiling, the zone with the longest dwell, stewards on shift and rides that ran. Welfare items and Money by Zone are hidden, because each role sees only the decisions it owns. | README ~2.1, ~10 |
+| 11 | [Keeper view](11-role-keeper.png) | Today as a keeper sees it: enclosures on alert, feeds refused or partial, advisory alerts raised against the budget, and evening feeds due. Navigation is cut to Today, Animals, Gardens and Recommendations. | README ~2.1, ~7.2 |
+| 12 | [AI outage](12-degraded.png) | What "Simulate AI outage" does. A banner states that AI detection is down, and that barrier contacts, float switches and threshold alarms carry on protecting the estate. Nothing is silently disabled. | README ~8 · [ADR-009](../../ADR/adr-009-critical-alarms-at-the-edge.md) |
+| 13 | [Gardens](13-gardens.png) | The carnivorous plant collection as stock to sell, not only a display: specimens monitored, plants ready to sell, a glasshouse irrigation alert, and propagation readiness for each collection. | README ~13 |
+| 14 | [Animals and aquatics, aquatic](14-collections-aquatic.png) | The aquatic tab of the welfare board. Tank 12 is recovering after its alarm, with oxygen back to 7.2 mg/L, alongside the reef community and the axolotls. | README ~7.2, ~8 |
+
