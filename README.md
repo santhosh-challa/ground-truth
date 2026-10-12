@@ -2,7 +2,7 @@
 
 **O'Reilly Architectural Katas 2026 — AI-Assisted Software Architecture**
 
-The 72nd Countess Von Digitalis has inherited a sprawling estate and a family business. They need the estate to become profitable, safe and well-run, on a property where the Wi-Fi cannot be trusted and the AI landscape will have changed by the time anything ships.
+The 72nd Countess Von Digitalis has inherited a sprawling estate and a family business. They need the estate to become profitable, safe and well run, on a property where the Wi-Fi cannot be trusted and the AI landscape will have changed by the time anything ships.
 
 ## At a glance
 
