@@ -2,6 +2,14 @@
 
 **O'Reilly Architectural Katas 2026 — AI-Assisted Software Architecture**
 
+## Update
+
+Thank you to the judges for the valuable feedback and to the entire O'Reilly team for organizing the event. It was a great learning experience just to be part of the event and to see the perspectives of all the participating teams.
+
+<img src="assets/oreilly-katas-first-place.webp" alt="O'Reilly Architectural Katas First Place" width="600">
+
+**Winners (First Place) - O'Reilly Architectural Katas 2026: AI-Assisted Software Architecture**
+
 The 72nd Countess Von Digitalis has inherited a sprawling estate and a family business. They need the estate to become profitable, safe and well run, on a property where the Wi-Fi cannot be trusted and the AI landscape will have changed by the time anything ships.
 
 ## At a glance
